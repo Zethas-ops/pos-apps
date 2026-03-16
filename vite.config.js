@@ -18,10 +18,12 @@ var stdin_default = defineConfig(({ mode }) => {
       }
     },
     server: {
-      host: true, // ensures Vite binds to all network interfaces
-      allowedHosts: ['poscoffee.zethas.my.id'], // add your hostname here
-    port: 5173, // optional: your dev server port
-      hmr: process.env.DISABLE_HMR !== "true"
+  host: true,
+  port: 5173,
+  allowedHosts: ['poscoffee.zethas.my.id'],
+    hmr: {
+      port: process.env.VITE_HMR_PORT || 24679
+      }
     }
   };
 });
