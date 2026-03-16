@@ -5,6 +5,14 @@ import { defineConfig, loadEnv } from "vite";
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+export default defineConfig({
+  // other config...
+  server: {
+    host: true, // ensures Vite binds to all network interfaces
+    allowedHosts: ['poscoffee.zethas.my.id'], // add your hostname here
+    port: 5173, // optional: your dev server port
+  },
+});
 var stdin_default = defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "");
   return {
