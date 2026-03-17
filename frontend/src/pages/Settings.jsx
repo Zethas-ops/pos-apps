@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
-import { supabase } from "../src/supabase";
+import supabase from "../supabase";
 
 function Settings() {
   const [profile, setProfile] = useState({
@@ -15,67 +15,50 @@ function Settings() {
     fetchProfile();
   }, []);
 
+  // 🔹 FETCH DATA
   const fetchProfile = async () => {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from("settings")
+      .from("store_profile")
       .select("*")
-      .limit(1)
-      .single();
+      .eq("id", 1)
+      .maybeSingle();
 
-    if (error && error.code !== "PGRST116") {
-      console.error(error);
+    if (error) {
+      console.error("Fetch error:", error);
     }
 
     if (data) {
-      setProfile(data);
+      setProfile({
+        store_name: data.store_name || "",
+        address: data.address || "",
+        phone: data.phone || "",
+      });
     }
 
     setLoading(false);
   };
 
+  // 🔹 SAVE DATA (UPSERT)
   const handleSaveProfile = async (e) => {
     e.preventDefault();
-
     setLoading(true);
 
-    const { data: existing } = await supabase
-      .from("settings")
-      .select("id")
-      .limit(1)
-      .single();
-
-    let error;
-
-    if (existing) {
-      // UPDATE
-      const res = await supabase
-        .from("settings")
-        .update({
-          ...profile,
-          updated_at: new Date(),
-        })
-        .eq("id", existing.id);
-
-      error = res.error;
-    } else {
-      // INSERT (first time)
-      const res = await supabase.from("settings").insert([
-        {
-          ...profile,
-          updated_at: new Date(),
-        },
-      ]);
-
-      error = res.error;
-    }
+    const { error } = await supabase.from("store_profile").upsert(
+      {
+        id: 1, // wajib karena constraint DB
+        ...profile,
+        // updated_at: new Date(), // aktifkan kalau kolom ada
+      },
+      { onConflict: "id" }
+    );
 
     setLoading(false);
 
     if (error) {
+      console.error("Save error:", error);
       alert("Error updating profile");
-      console.error(error);
     } else {
       alert("Store profile updated successfully");
     }
@@ -94,6 +77,7 @@ function Settings() {
         </div>
 
         <form onSubmit={handleSaveProfile} className="p-6 space-y-6">
+          {/* Store Name */}
           <input
             required
             type="text"
@@ -105,6 +89,7 @@ function Settings() {
             className="w-full p-3 rounded-xl border"
           />
 
+          {/* Address */}
           <textarea
             required
             placeholder="Address"
@@ -115,6 +100,7 @@ function Settings() {
             className="w-full p-3 rounded-xl border"
           />
 
+          {/* Phone */}
           <input
             required
             type="text"
@@ -126,6 +112,7 @@ function Settings() {
             className="w-full p-3 rounded-xl border"
           />
 
+          {/* Button */}
           <button
             type="submit"
             disabled={loading}

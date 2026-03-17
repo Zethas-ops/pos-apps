@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Minus, Trash2, Search, X, Check, ShoppingBag } from "lucide-react";
 import { clsx } from "clsx";
 import { useLocation } from "react-router-dom";
+import supabase from "../supabase";
 function POS() {
   const location = useLocation();
   const [menu, setMenu] = useState([]);
@@ -150,21 +151,47 @@ function POS() {
   const fetchData = async () => {
     const token = localStorage.getItem("token");
     try {
-      const [menuRes, profileRes, promoRes] = await Promise.all([
-        fetch("/api/menu", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("/api/settings", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("/api/promo", { headers: { Authorization: `Bearer ${token}` } })
-      ]);
-      const menuData = await menuRes.json();
-      setMenu(menuData);
-      const cats = Array.from(new Set(menuData.map((item) => item.category)));
-      setCategories(["All", ...cats]);
-      if (profileRes.ok) {
-        setStoreProfile(await profileRes.json());
-      }
-      if (promoRes.ok) {
-        setPromos(await promoRes.json());
-      }
+      const { data: menuData } = await supabase.from("menu").select("*");
+      const { data: recipes } = await supabase.from("recipes").select("*");
+      const { data: ingredients } = await supabase.from("ingredients").select("*");
+      const { data: addons } = await supabase.from("menu_addons").select("*");
+      const { data: profile } = await supabase
+        .from("store_profile")
+        .select("*")
+        .eq("id", 1)
+       .maybeSingle();
+      const { data: promoData } = await supabase.from("promotions").select("*");
+
+// JOIN manual (WAJIB biar logic lama tetap jalan)
+      const mergedMenu = menuData.map((m) => {
+        const menuRecipes = recipes
+          .filter((r) => r.menu_id === m.menu_id)
+         .map((r) => {
+           const ing = ingredients.find(i => i.ingredient_id === r.ingredient_id);
+           return {
+              ...r,
+             ingredient_name: ing?.ingredient_name,
+             current_stock: ing?.current_stock,
+             unit: ing?.unit
+            };
+         });
+
+       const menuAddons = addons
+          .filter((a) => a.menu_id === m.menu_id)
+         .map((a) => menuData.find((m2) => m2.menu_id === a.addon_menu_id));
+
+       return {
+         ...m,
+         recipes: menuRecipes,
+         addons: menuAddons,
+         maxQty: 999
+       };
+      });
+
+      setMenu(mergedMenu);
+      setCategories(["All", ...new Set(mergedMenu.map(m => m.category))]);
+      setStoreProfile(profile);
+      setPromos(promoData || []);
     } catch (err) {
       console.error("Error fetching data", err);
     }
@@ -355,28 +382,48 @@ function POS() {
   const processPayment = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("/api/pos/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          table_no: tableNo,
-          customer_name: customerName,
-          payment_method: paymentMethod,
-          subtotal: totals.subtotal,
-          tax: totals.tax,
-          discount: totals.discount,
-          cash_amount: paymentMethod === "Cash" ? Number(cashAmount) : totals.total,
-          change_amount: paymentMethod === "Cash" ? Number(cashAmount) - totals.total : 0,
-          total_price: totals.total,
-          items: cart,
-          open_bill_id: openBillId
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      // 🔥 INSERT TRANSACTION
+const { data: trx, error: trxError } = await supabase
+  .from("transactions")
+  .insert([{
+    date: new Date(),
+    total_price: totals.total,
+    payment_method: paymentMethod,
+    table_no: tableNo,
+    customer_name: customerName,
+    subtotal: totals.subtotal,
+    tax: totals.tax,
+    discount: totals.discount,
+    cash_amount: paymentMethod === "Cash" ? Number(cashAmount) : totals.total,
+    change_amount: paymentMethod === "Cash" ? Number(cashAmount) - totals.total : 0,
+  }])
+  .select()
+  .single();
+
+if (trxError) throw trxError;
+
+// 🔥 INSERT ITEMS
+const { error: itemsError } = await supabase
+  .from("transaction_items")
+  .insert(
+    cart.map((item) => ({
+      transaction_id: trx.transaction_id,
+      menu_id: item.menu_id,
+      menu_name: item.menu_name,
+      qty: item.qty,
+      price: item.price,
+      subtotal: item.subtotal,
+      addons: JSON.stringify(item.addons || []),
+      is_auto_free: item.is_auto_free || false
+    }))
+  );
+
+if (itemsError) throw itemsError;
+
+// OPTIONAL: delete open bill kalau ada
+if (openBillId) {
+  await supabase.from("open_bills").delete().eq("bill_id", openBillId);
+}
       const receiptContent = `
         <html>
           <head>
@@ -500,26 +547,64 @@ function POS() {
     }
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("/api/pos/open-bill", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          table_no: tableNo,
-          customer_name: customerName,
-          subtotal: totals.subtotal,
-          tax: totals.tax,
-          discount: totals.discount,
-          items: cart,
-          open_bill_id: openBillId
-        })
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save open bill");
-      }
+      // 🔥 INSERT / UPDATE OPEN BILL
+let billId = openBillId;
+
+if (!openBillId) {
+  const { data: bill, error: billError } = await supabase
+    .from("open_bills")
+    .insert([{
+      table_no: tableNo,
+      customer_name: customerName,
+      subtotal: totals.subtotal,
+      tax: totals.tax,
+      discount: totals.discount,
+      total_price: totals.total
+    }])
+    .select()
+    .single();
+
+  if (billError) throw billError;
+  billId = bill.bill_id;
+} else {
+  const { error: updateError } = await supabase
+    .from("open_bills")
+    .update({
+      table_no: tableNo,
+      customer_name: customerName,
+      subtotal: totals.subtotal,
+      tax: totals.tax,
+      discount: totals.discount,
+      total_price: totals.total
+    })
+    .eq("bill_id", openBillId);
+
+  if (updateError) throw updateError;
+
+  // 🔥 hapus item lama dulu
+  await supabase
+    .from("open_bill_items")
+    .delete()
+    .eq("bill_id", openBillId);
+}
+
+// 🔥 INSERT ITEMS
+const { error: itemsError } = await supabase
+  .from("open_bill_items")
+  .insert(
+    cart.map((item) => ({
+      bill_id: billId,
+      menu_id: item.menu_id,
+      menu_name: item.menu_name,
+      qty: item.qty,
+      price: item.price,
+      subtotal: item.subtotal,
+      addons: JSON.stringify(item.addons || []),
+      is_auto_free: item.is_auto_free || false
+    }))
+  );
+
+if (itemsError) throw itemsError;
       alert("Open bill saved!");
       setCart([]);
       setTableNo("");

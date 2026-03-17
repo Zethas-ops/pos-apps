@@ -25,14 +25,51 @@ function Dashboard() {
         queryParams.append("paymentMethod", paymentMethod);
       }
       const queryString = queryParams.toString();
-      const [metricsRes, chartsRes] = await Promise.all([
-        fetch(`/api/dashboard/metrics?${queryString}`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`/api/dashboard/charts?${queryString}`, { headers: { Authorization: `Bearer ${token}` } })
-      ]);
-      const metricsData = await metricsRes.json();
-      const chartsData = await chartsRes.json();
-      setMetrics(metricsData);
-      setCharts(chartsData);
+      // 🔥 GET DATE RANGE
+const startDate = start.toISOString();
+const endDate = end.toISOString();
+
+// 🔥 METRICS (TOTAL SALES, TRANSACTIONS, dll)
+const { data: transactions, error: trxError } = await supabase
+  .from("transactions")
+  .select("*")
+  .gte("created_at", startDate)
+  .lte("created_at", endDate);
+
+if (trxError) throw trxError;
+
+// 🔥 HITUNG METRICS
+const totalRevenue = transactions.reduce((sum, t) => sum + t.total_price, 0);
+const totalTransactions = transactions.length;
+const totalItems = transactions.reduce((sum, t) => sum + (t.total_items || 0), 0);
+
+const metricsData = {
+  total_revenue: totalRevenue,
+  total_transactions: totalTransactions,
+  total_items: totalItems
+};
+
+setMetrics(metricsData);
+
+// 🔥 CHART DATA (GROUP PER HARI)
+const chartMap = {};
+
+transactions.forEach((trx) => {
+  const date = new Date(trx.created_at).toLocaleDateString();
+
+  if (!chartMap[date]) {
+    chartMap[date] = 0;
+  }
+
+  chartMap[date] += trx.total_price;
+});
+
+const chartsData = Object.keys(chartMap).map((date) => ({
+  date,
+  total: chartMap[date]
+}));
+
+setCharts(chartsData);
     } catch (err) {
       console.error("Failed to fetch dashboard data");
     } finally {
@@ -80,12 +117,50 @@ function Dashboard() {
   };
   const handleExportCSV = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/settings/export?start_date=${startDate}&end_date=${endDate}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      // 🔥 ambil data dari supabase
+const { data, error } = await supabase
+  .from("transactions")
+  .select("*")
+  .gte("created_at", startDate)
+  .lte("created_at", endDate)
+  .order("created_at", { ascending: true });
+
+if (error) throw error;
+
+// 🔥 convert ke CSV
+const headers = [
+  "ID",
+  "Date",
+  "Customer",
+  "Table",
+  "Payment",
+  "Subtotal",
+  "Tax",
+  "Discount",
+  "Total"
+];
+
+const rows = data.map((trx) => [
+  trx.id,
+  trx.created_at,
+  trx.customer_name,
+  trx.table_no,
+  trx.payment_method,
+  trx.subtotal,
+  trx.tax,
+  trx.discount,
+  trx.total_price
+]);
+
+const csvContent =
+  [headers, ...rows]
+    .map((row) => row.join(","))
+    .join("\n");
+
+// 🔥 download CSV
+const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+const url = window.URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = `transactions-${startDate}-to-${endDate}.csv`;
