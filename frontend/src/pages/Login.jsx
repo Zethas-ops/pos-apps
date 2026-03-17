@@ -1,91 +1,94 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../supabase";
+
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const handleLogin = async () => {
-  console.log("LOGIN CLICKED");
 
-  if (!username || !password) {
-    setError("Username and password are required");
-    return;
-  }
+  const handleLogin = async (e) => {
+    e.preventDefault(); // ⬅️ penting
 
-  try {
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("username", username)
-      .single();
+    console.log("LOGIN CLICKED");
 
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
-
-    if (error || !data) {
-      setError("User tidak ditemukan");
+    if (!username || !password) {
+      setError("Username and password are required");
       return;
     }
 
-    if (data.password !== password) {
-      setError("Password salah");
-      return;
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("username", username)
+        .single();
+
+      console.log("DATA:", data);
+      console.log("ERROR:", error);
+
+      if (error || !data) {
+        setError("User tidak ditemukan");
+        return;
+      }
+
+      if (data.password !== password) {
+        setError("Password salah");
+        return;
+      }
+
+      console.log("LOGIN SUCCESS");
+
+      localStorage.setItem("user", JSON.stringify(data));
+      navigate("/");
+
+    } catch (err) {
+      console.error(err);
+      setError("An error occurred during login");
     }
-
-    console.log("LOGIN SUCCESS");
-
-    localStorage.setItem("user", JSON.stringify(data));
-    window.location.href = "/";
-
-  } catch (err) {
-    console.error(err);
-    setError("An error occurred during login");
-  }
-};
   };
-  return <div className="min-h-screen flex items-center justify-center bg-gray-100">
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Coffee POS</h1>
-        
-        {error && <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm">
+        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          Coffee POS
+        </h1>
+
+        {error && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm">
             {error}
-          </div>}
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-            <input
-    type="text"
-    value={username}
-    onChange={(e) => setUsername(e.target.value)}
-    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-    placeholder="Enter username"
-  />
-          </div>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-            <input
-    type="password"
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-    placeholder="Enter password"
-  />
-          </div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border"
+          />
 
           <button
-    type="submit"
-    onClick={handleLogin}
-    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
-  >
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-xl"
+          >
             Sign In
           </button>
         </form>
       </div>
-    </div>;
-export {
-  Login as default
-};
+    </div>
+  );
+}
+
+export default Login;
