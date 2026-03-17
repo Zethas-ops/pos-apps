@@ -20,6 +20,9 @@ function Login() {
       .eq("username", username)
       .single();
 
+      console.log("DATA:", data);
+      console.log("ERROR:", error);   
+
   if (error || !data) {
     setError("User tidak ditemukan");
     return;
@@ -30,11 +33,14 @@ function Login() {
     return;
   }
 
+  console.log("LOGIN SUCCESS:");
+
   // ✅ login sukses
   localStorage.setItem("user", JSON.stringify(data));
   navigate("/");
 
 } catch (err) {
+  console.error("CATCH ERROR:", err);
   setError("An error occurred during login");
 }
   };
