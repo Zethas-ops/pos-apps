@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { transformSync } from 'esbuild';
 
-function walkDir(dir, callback) { //test push
+function walkDir(dir, callback) {
   fs.readdirSync(dir).forEach(f => {
     let dirPath = path.join(dir, f);
     let isDirectory = fs.statSync(dirPath).isDirectory();

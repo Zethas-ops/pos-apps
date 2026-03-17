@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Edit, Power } from "lucide-react";
 import { format } from "date-fns";
-import supabase from "../supabase";
 function Promo() {
   const [promos, setPromos] = useState([]);
   const [menu, setMenu] = useState([]);

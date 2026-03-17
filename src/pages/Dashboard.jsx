@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { DollarSign, Calendar, Download, Clock, TrendingUp, ShoppingBag } from "lucide-react";
-import { format, subDays } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { supabase } from "../lib/supabase";
+
 function Dashboard() {
   const [metrics, setMetrics] = useState({});
   const [charts, setCharts] = useState({ salesChart: [], hourlyTraffic: [], paymentMethods: [], topSelling: [] });
@@ -13,65 +15,139 @@ function Dashboard() {
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
   const isAdmin = user?.role === "ADMIN";
+  
   const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const queryParams = new URLSearchParams({
-        startDate: `${startDate}T00:00:00.000Z`,
-        endDate: `${endDate}T23:59:59.999Z`
-      });
-      if (paymentMethod) {
-        queryParams.append("paymentMethod", paymentMethod);
+      
+      const now = new Date();
+      const todayStart = startOfDay(now).toISOString();
+      const todayEnd = endOfDay(now).toISOString();
+      const weekStart = startOfWeek(now).toISOString();
+      const weekEnd = endOfWeek(now).toISOString();
+      const monthStart = startOfMonth(now).toISOString();
+      const monthEnd = endOfMonth(now).toISOString();
+
+      const start = `${startDate}T00:00:00.000Z`;
+      const end = `${endDate}T23:59:59.999Z`;
+
+      // 1. Filtered Transactions (for charts and filtered metrics)
+      let filteredQuery = supabase
+        .from('transactions')
+        .select('*, transaction_items(*)')
+        .gte('date', start)
+        .lte('date', end);
+      
+      if (paymentMethod && paymentMethod !== "All") {
+        filteredQuery = filteredQuery.eq('payment_method', paymentMethod);
       }
-      const queryString = queryParams.toString();
-      // 🔥 GET DATE RANGE
-const startDate = start.toISOString();
-const endDate = end.toISOString();
+      
+      const { data: filteredTxns, error: filteredErr } = await filteredQuery;
+      if (filteredErr) throw filteredErr;
 
-// 🔥 METRICS (TOTAL SALES, TRANSACTIONS, dll)
-const { data: transactions, error: trxError } = await supabase
-  .from("transactions")
-  .select("*")
-  .gte("created_at", startDate)
-  .lte("created_at", endDate);
+      // 2. Month Transactions (for today, week, month metrics)
+      const earliestStart = new Date(Math.min(new Date(monthStart).getTime(), new Date(weekStart).getTime())).toISOString();
+      
+      let metricQuery = supabase
+        .from('transactions')
+        .select('*')
+        .gte('date', earliestStart)
+        .lte('date', monthEnd);
+        
+      if (paymentMethod && paymentMethod !== "All") {
+        metricQuery = metricQuery.eq('payment_method', paymentMethod);
+      }
+      
+      const { data: metricTxns, error: metricErr } = await metricQuery;
+      if (metricErr) throw metricErr;
 
-if (trxError) throw trxError;
+      // Calculate Metrics
+      const filteredSales = filteredTxns.reduce((sum, t) => sum + Number(t.total_price), 0);
+      const filteredOrders = filteredTxns.length;
 
-// 🔥 HITUNG METRICS
-const totalRevenue = transactions.reduce((sum, t) => sum + t.total_price, 0);
-const totalTransactions = transactions.length;
-const totalItems = transactions.reduce((sum, t) => sum + (t.total_items || 0), 0);
+      const todayTxns = metricTxns.filter(t => t.date >= todayStart && t.date <= todayEnd);
+      const weekTxns = metricTxns.filter(t => t.date >= weekStart && t.date <= weekEnd);
+      const monthTxnsOnly = metricTxns.filter(t => t.date >= monthStart && t.date <= monthEnd);
 
-const metricsData = {
-  total_revenue: totalRevenue,
-  total_transactions: totalTransactions,
-  total_items: totalItems
-};
+      const todaySales = todayTxns.reduce((sum, t) => sum + Number(t.total_price), 0);
+      const weekSales = weekTxns.reduce((sum, t) => sum + Number(t.total_price), 0);
+      const monthSales = monthTxnsOnly.reduce((sum, t) => sum + Number(t.total_price), 0);
+      const todayOrders = todayTxns.length;
 
-setMetrics(metricsData);
+      setMetrics({
+        filteredSales,
+        filteredOrders,
+        todaySales,
+        weekSales,
+        monthSales,
+        todayOrders
+      });
 
-// 🔥 CHART DATA (GROUP PER HARI)
-const chartMap = {};
+      // Calculate Charts
+      const salesByDay = {};
+      filteredTxns.forEach(t => {
+        const day = t.date.split('T')[0].substring(5); // MM-DD
+        if (!salesByDay[day]) salesByDay[day] = 0;
+        salesByDay[day] += Number(t.total_price);
+      });
+      const salesChart = Object.keys(salesByDay).sort().map(date => ({
+        label: date,
+        revenue: salesByDay[date]
+      }));
 
-transactions.forEach((trx) => {
-  const date = new Date(trx.created_at).toLocaleDateString();
+      const trafficByHour = {};
+      todayTxns.forEach(t => {
+        const hour = new Date(t.date).getHours().toString().padStart(2, '0') + ':00';
+        if (!trafficByHour[hour]) trafficByHour[hour] = { orders: 0, revenue: 0 };
+        trafficByHour[hour].orders += 1;
+        trafficByHour[hour].revenue += Number(t.total_price);
+      });
+      const hourlyTraffic = Object.keys(trafficByHour).sort().map(hour => ({
+        label: hour,
+        orders: trafficByHour[hour].orders,
+        revenue: trafficByHour[hour].revenue
+      }));
 
-  if (!chartMap[date]) {
-    chartMap[date] = 0;
-  }
+      const pmCount = {};
+      filteredTxns.forEach(t => {
+        const pm = t.payment_method;
+        if (!pmCount[pm]) pmCount[pm] = 0;
+        pmCount[pm] += 1;
+      });
+      const paymentMethods = Object.keys(pmCount).map(pm => ({
+        name: pm,
+        value: pmCount[pm]
+      }));
 
-  chartMap[date] += trx.total_price;
-});
+      const itemSales = {};
+      filteredTxns.forEach(t => {
+        if (t.transaction_items) {
+          t.transaction_items.forEach(item => {
+            const name = item.menu_name;
+            if (!itemSales[name]) itemSales[name] = { sold: 0, revenue: 0 };
+            itemSales[name].sold += Number(item.qty);
+            itemSales[name].revenue += Number(item.subtotal);
+          });
+        }
+      });
+      const topSelling = Object.keys(itemSales)
+        .map(name => ({
+          name,
+          sold: itemSales[name].sold,
+          revenue: itemSales[name].revenue
+        }))
+        .sort((a, b) => b.sold - a.sold)
+        .slice(0, 5);
 
-const chartsData = Object.keys(chartMap).map((date) => ({
-  date,
-  total: chartMap[date]
-}));
+      setCharts({
+        salesChart,
+        hourlyTraffic,
+        paymentMethods,
+        topSelling
+      });
 
-setCharts(chartsData);
     } catch (err) {
-      console.error("Failed to fetch dashboard data");
+      console.error("Failed to fetch dashboard data", err);
     } finally {
       setLoading(false);
     }
@@ -117,55 +193,69 @@ setCharts(chartsData);
   };
   const handleExportCSV = async () => {
     try {
-      // 🔥 ambil data dari supabase
-const { data, error } = await supabase
-  .from("transactions")
-  .select("*")
-  .gte("created_at", startDate)
-  .lte("created_at", endDate)
-  .order("created_at", { ascending: true });
+      const start = `${startDate}T00:00:00.000Z`;
+      const end = `${endDate}T23:59:59.999Z`;
+      
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*, transaction_items(*)')
+        .gte('date', start)
+        .lte('date', end);
 
-if (error) throw error;
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        alert("No data found for the selected date range");
+        return;
+      }
 
-// 🔥 convert ke CSV
-const headers = [
-  "ID",
-  "Date",
-  "Customer",
-  "Table",
-  "Payment",
-  "Subtotal",
-  "Tax",
-  "Discount",
-  "Total"
-];
+      // Flatten the data for CSV
+      const csvData = [];
+      data.forEach(t => {
+        if (t.transaction_items && t.transaction_items.length > 0) {
+          t.transaction_items.forEach(item => {
+            csvData.push({
+              transaction_id: t.transaction_id,
+              date: t.date,
+              table_no: t.table_no || '',
+              customer_name: t.customer_name || '',
+              payment_method: t.payment_method,
+              total_price: t.total_price,
+              menu_name: item.menu_name,
+              addons: item.addons ? JSON.stringify(item.addons) : '',
+              qty: item.qty,
+              price: item.price,
+              subtotal: item.subtotal
+            });
+          });
+        } else {
+          csvData.push({
+            transaction_id: t.transaction_id,
+            date: t.date,
+            table_no: t.table_no || '',
+            customer_name: t.customer_name || '',
+            payment_method: t.payment_method,
+            total_price: t.total_price,
+            menu_name: '',
+            addons: '',
+            qty: '',
+            price: '',
+            subtotal: ''
+          });
+        }
+      });
 
-const rows = data.map((trx) => [
-  trx.id,
-  trx.created_at,
-  trx.customer_name,
-  trx.table_no,
-  trx.payment_method,
-  trx.subtotal,
-  trx.tax,
-  trx.discount,
-  trx.total_price
-]);
-
-const csvContent =
-  [headers, ...rows]
-    .map((row) => row.join(","))
-    .join("\n");
-
-// 🔥 download CSV
-const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-const url = window.URL.createObjectURL(blob);
-
+      const headers = Object.keys(csvData[0]).join(",");
+      const csv = csvData.map((row) => Object.values(row).map((val) => `"${String(val).replace(/"/g, '""')}"`).join(",")).join("\n");
+      
+      const blob = new Blob([`${headers}\n${csv}`], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `transactions-${startDate}-to-${endDate}.csv`;
       a.click();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
+      console.error(err);
       alert("Failed to export CSV");
     }
   };

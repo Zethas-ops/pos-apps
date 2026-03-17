@@ -5,12 +5,7 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-  const isAdmin = user.role?.toLowerCase() === "admin";
-
-const permissions = isAdmin
-  ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"]
-  : ["pos", "open-bills", "history"];
+  const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : ["pos", "open-bills", "history"]);
   
   const allNavItems = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard, id: "dashboard" },
