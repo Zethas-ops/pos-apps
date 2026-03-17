@@ -8,9 +8,7 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault(); // ⬅️ penting
-
+  const handleLogin = async () => {
     console.log("LOGIN CLICKED");
 
     if (!username || !password) {
@@ -62,7 +60,7 @@ function Login() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <div className="space-y-6">
           <input
             type="text"
             placeholder="Username"
@@ -80,12 +78,13 @@ function Login() {
           />
 
           <button
-            type="submit"
+            type="button"
+            onClick={handleLogin}
             className="w-full bg-blue-600 text-white py-3 rounded-xl"
           >
-            Sign Innnnn
+            Sign In
           </button>
-        </form>
+        </div>
       </div>
     </div>
   );
