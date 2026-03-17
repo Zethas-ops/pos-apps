@@ -14,14 +14,16 @@ import Promo from "./pages/Promo";
 import Settings from "./pages/Settings";
 import RoleManagement from "./pages/RoleManagement";
 import Layout from "./components/Layout";
-function PrivateRoute({ children, requireAdmin }) {
+function PrivateRoute({ children, requirePermission }) {
   const token = localStorage.getItem("token");
   const userStr = localStorage.getItem("user");
   if (!token || !userStr) {
     return <Navigate to="/login" />;
   }
   const user = JSON.parse(userStr);
-  if (requireAdmin && user.role !== "ADMIN") {
+  const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : ["pos", "open-bills", "history"]);
+  
+  if (requirePermission && !permissions.includes(requirePermission)) {
     return <Navigate to="/" />;
   }
   return children;
@@ -33,18 +35,15 @@ function App() {
         
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Dashboard />} />
-          <Route path="pos" element={<POS />} />
-          <Route path="open-bills" element={<OpenBills />} />
-          <Route path="history" element={<History />} />
+          <Route path="pos" element={<PrivateRoute requirePermission="pos"><POS /></PrivateRoute>} />
+          <Route path="open-bills" element={<PrivateRoute requirePermission="open-bills"><OpenBills /></PrivateRoute>} />
+          <Route path="history" element={<PrivateRoute requirePermission="history"><History /></PrivateRoute>} />
           
-          {
-    /* Admin Only Routes */
-  }
-          <Route path="menu" element={<PrivateRoute requireAdmin><MenuManagement /></PrivateRoute>} />
-          <Route path="inventory" element={<PrivateRoute requireAdmin><Inventory /></PrivateRoute>} />
-          <Route path="promo" element={<PrivateRoute requireAdmin><Promo /></PrivateRoute>} />
-          <Route path="roles" element={<PrivateRoute requireAdmin><RoleManagement /></PrivateRoute>} />
-          <Route path="settings" element={<PrivateRoute requireAdmin><Settings /></PrivateRoute>} />
+          <Route path="menu" element={<PrivateRoute requirePermission="menu"><MenuManagement /></PrivateRoute>} />
+          <Route path="inventory" element={<PrivateRoute requirePermission="inventory"><Inventory /></PrivateRoute>} />
+          <Route path="promo" element={<PrivateRoute requirePermission="promo"><Promo /></PrivateRoute>} />
+          <Route path="roles" element={<PrivateRoute requirePermission="roles"><RoleManagement /></PrivateRoute>} />
+          <Route path="settings" element={<PrivateRoute requirePermission="settings"><Settings /></PrivateRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>;

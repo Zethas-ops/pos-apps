@@ -1,12 +1,12 @@
 import { Router } from "express";
 import db from "../db.js";
-import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { authenticate, requirePermission } from "../middleware/auth.js";
 const router = Router();
 router.get("/", authenticate, (req, res) => {
   const profile = db.prepare("SELECT * FROM STORE_PROFILE WHERE id = 1").get();
   res.json(profile);
 });
-router.put("/", authenticate, requireAdmin, (req, res) => {
+router.put("/", authenticate, requirePermission("settings"), (req, res) => {
   const { store_name, address, phone } = req.body;
   try {
     db.prepare("UPDATE STORE_PROFILE SET store_name = ?, address = ?, phone = ? WHERE id = 1").run(store_name, address, phone);
@@ -52,7 +52,7 @@ router.post("/print", authenticate, async (req, res) => {
     res.status(500).json({ error: "Failed to print receipt" });
   }
 });
-router.get("/export", authenticate, requireAdmin, (req, res) => {
+router.get("/export", authenticate, requirePermission("settings"), (req, res) => {
   const { start_date, end_date } = req.query;
   try {
     const start = `${start_date}T00:00:00.000Z`;

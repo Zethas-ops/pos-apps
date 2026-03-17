@@ -1,12 +1,12 @@
 import { Router } from "express";
 import db from "../db.js";
-import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { authenticate, requirePermission } from "../middleware/auth.js";
 const router = Router();
-router.get("/", authenticate, requireAdmin, (req, res) => {
+router.get("/", authenticate, requirePermission("inventory"), (req, res) => {
   const ingredients = db.prepare("SELECT * FROM INGREDIENTS").all();
   res.json(ingredients);
 });
-router.post("/", authenticate, requireAdmin, (req, res) => {
+router.post("/", authenticate, requirePermission("inventory"), (req, res) => {
   const { ingredient_name, unit, current_stock } = req.body;
   try {
     const info = db.prepare("INSERT INTO INGREDIENTS (ingredient_name, unit, current_stock) VALUES (?, ?, ?)").run(
@@ -19,7 +19,7 @@ router.post("/", authenticate, requireAdmin, (req, res) => {
     res.status(500).json({ error: "Failed to add ingredient" });
   }
 });
-router.put("/:id/adjust", authenticate, requireAdmin, (req, res) => {
+router.put("/:id/adjust", authenticate, requirePermission("inventory"), (req, res) => {
   const { amount } = req.body;
   const { id } = req.params;
   try {

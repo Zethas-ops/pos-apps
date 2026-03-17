@@ -11,7 +11,8 @@ function initDb() {
       name TEXT,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      role TEXT NOT NULL
+      role TEXT NOT NULL,
+      permissions TEXT
     );
 
     CREATE TABLE IF NOT EXISTS MENU (
@@ -189,11 +190,15 @@ function initDb() {
     db.prepare("ALTER TABLE TRANSACTION_ITEMS ADD COLUMN is_auto_free INTEGER DEFAULT 0").run();
   } catch (e) {
   }
+  try {
+    db.prepare("ALTER TABLE USERS ADD COLUMN permissions TEXT").run();
+  } catch (e) {
+  }
   const userCount = db.prepare("SELECT COUNT(*) as count FROM USERS").get();
   if (userCount.count === 0) {
-    const insertUser = db.prepare("INSERT INTO USERS (name, username, password, role) VALUES (?, ?, ?, ?)");
-    insertUser.run("Administrator", "admin", bcrypt.hashSync("admin", 10), "ADMIN");
-    insertUser.run("Cashier", "user", bcrypt.hashSync("user", 10), "USER");
+    const insertUser = db.prepare("INSERT INTO USERS (name, username, password, role, permissions) VALUES (?, ?, ?, ?, ?)");
+    insertUser.run("Administrator", "admin", bcrypt.hashSync("admin", 10), "ADMIN", JSON.stringify(["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"]));
+    insertUser.run("Cashier", "user", bcrypt.hashSync("user", 10), "USER", JSON.stringify(["pos", "open-bills", "history"]));
   }
   const profileCount = db.prepare("SELECT COUNT(*) as count FROM STORE_PROFILE").get();
   if (profileCount.count === 0) {

@@ -13,10 +13,16 @@ router.post("/login", (req, res) => {
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(401).json({ error: "Invalid username or password" });
   }
-  const token = jwt.sign({ id: user.id, name: user.name, username: user.username, role: user.role }, JWT_SECRET, {
+  let permissions = [];
+  if (user.permissions) {
+    permissions = JSON.parse(user.permissions);
+  } else {
+    permissions = user.role === 'ADMIN' ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : ["pos", "open-bills", "history"];
+  }
+  const token = jwt.sign({ id: user.id, name: user.name, username: user.username, role: user.role, permissions }, JWT_SECRET, {
     expiresIn: "24h"
   });
-  res.json({ token, user: { id: user.id, name: user.name, username: user.username, role: user.role } });
+  res.json({ token, user: { id: user.id, name: user.name, username: user.username, role: user.role, permissions } });
 });
 var stdin_default = router;
 export {
