@@ -6,13 +6,14 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    console.log("LOGIN CLICKED");
-    if (!username || !password) {
-      setError("Username and password are required");
-      return;
-    }
+  const handleLogin = async () => {
+  console.log("LOGIN CLICKED");
+
+  if (!username || !password) {
+    setError("Username and password are required");
+    return;
+  }
+
   try {
     const { data, error } = await supabase
       .from("users")
@@ -20,29 +21,29 @@ function Login() {
       .eq("username", username)
       .single();
 
-      console.log("DATA:", data);
-      console.log("ERROR:", error);   
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
-  if (error || !data) {
-    setError("User tidak ditemukan");
-    return;
+    if (error || !data) {
+      setError("User tidak ditemukan");
+      return;
+    }
+
+    if (data.password !== password) {
+      setError("Password salah");
+      return;
+    }
+
+    console.log("LOGIN SUCCESS");
+
+    localStorage.setItem("user", JSON.stringify(data));
+    window.location.href = "/";
+
+  } catch (err) {
+    console.error(err);
+    setError("An error occurred during login");
   }
-
-  if (data.password !== password) {
-    setError("Password salah");
-    return;
-  }
-
-  console.log("LOGIN SUCCESS:");
-
-  // ✅ login sukses
-  localStorage.setItem("user", JSON.stringify(data));
-  navigate("/");
-
-} catch (err) {
-  console.error("CATCH ERROR:", err);
-  setError("An error occurred during login");
-}
+};
   };
   return <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
@@ -77,6 +78,7 @@ function Login() {
 
           <button
     type="submit"
+    onClick={handleLogin}
     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
   >
             Sign In
@@ -84,7 +86,6 @@ function Login() {
         </form>
       </div>
     </div>;
-}
 export {
   Login as default
 };
