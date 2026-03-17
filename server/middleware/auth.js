@@ -20,7 +20,19 @@ function requireAdmin(req, res, next) {
   }
   next();
 }
+
+function requirePermission(permission) {
+  return (req, res, next) => {
+    const userPerms = req.user?.permissions || (req.user?.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : ["pos", "open-bills", "history"]);
+    if (!userPerms.includes(permission)) {
+      return res.status(403).json({ error: `Permission '${permission}' required` });
+    }
+    next();
+  };
+}
+
 export {
   authenticate,
-  requireAdmin
+  requireAdmin,
+  requirePermission
 };

@@ -1,12 +1,12 @@
 import { Router } from "express";
 import db from "../db.js";
-import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { authenticate, requirePermission } from "../middleware/auth.js";
 const router = Router();
 router.get("/", authenticate, (req, res) => {
   const promos = db.prepare("SELECT * FROM PROMOTIONS ORDER BY promo_id DESC").all();
   res.json(promos);
 });
-router.post("/", authenticate, requireAdmin, (req, res) => {
+router.post("/", authenticate, requirePermission("promo"), (req, res) => {
   const { title, type, discount_percent, discount_amount, min_buy_qty, free_qty, min_buy_menu_id, free_menu_id, min_nominal, promo_rule, start_date, end_date, day_filter, time_filter } = req.body;
   try {
     const info = db.prepare(`
@@ -18,7 +18,7 @@ router.post("/", authenticate, requireAdmin, (req, res) => {
     res.status(500).json({ error: "Failed to create promotion" });
   }
 });
-router.put("/:id", authenticate, requireAdmin, (req, res) => {
+router.put("/:id", authenticate, requirePermission("promo"), (req, res) => {
   const { title, type, discount_percent, discount_amount, min_buy_qty, free_qty, min_buy_menu_id, free_menu_id, min_nominal, promo_rule, start_date, end_date, day_filter, time_filter } = req.body;
   try {
     db.prepare(`
@@ -31,7 +31,7 @@ router.put("/:id", authenticate, requireAdmin, (req, res) => {
     res.status(500).json({ error: "Failed to update promotion" });
   }
 });
-router.patch("/:id/toggle", authenticate, requireAdmin, (req, res) => {
+router.patch("/:id/toggle", authenticate, requirePermission("promo"), (req, res) => {
   try {
     db.prepare("UPDATE PROMOTIONS SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE promo_id = ?").run(req.params.id);
     res.json({ success: true });
@@ -39,7 +39,7 @@ router.patch("/:id/toggle", authenticate, requireAdmin, (req, res) => {
     res.status(500).json({ error: "Failed to toggle promotion" });
   }
 });
-router.delete("/:id", authenticate, requireAdmin, (req, res) => {
+router.delete("/:id", authenticate, requirePermission("promo"), (req, res) => {
   try {
     db.prepare("DELETE FROM PROMOTIONS WHERE promo_id = ?").run(req.params.id);
     res.json({ success: true });

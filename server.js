@@ -13,10 +13,7 @@ import settingsRoutes from "./server/routes/settings.js";
 import usersRoutes from "./server/routes/users.js";
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  const PORT = 3e3;
   const uploadsDir = path.join(process.cwd(), "uploads");
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);

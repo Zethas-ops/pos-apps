@@ -18,12 +18,9 @@ var stdin_default = defineConfig(({ mode }) => {
       }
     },
     server: {
-  host: true,
-  port: 5173,
-  allowedHosts: ['poscoffee.zethas.my.id'],
-    hmr: {
-      port: process.env.VITE_HMR_PORT || 24679
-      }
+      // HMR is disabled in AI Studio via DISABLE_HMR env var.
+      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      hmr: process.env.DISABLE_HMR !== "true"
     }
   };
 });

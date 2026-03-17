@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import path from "path";
 import db from "../db.js";
-import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { authenticate, requirePermission } from "../middleware/auth.js";
 const router = Router();
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -56,7 +56,7 @@ router.get("/", authenticate, (req, res) => {
   });
   res.json(itemsWithDetails);
 });
-router.post("/", authenticate, requireAdmin, upload.single("image"), (req, res) => {
+router.post("/", authenticate, requirePermission("menu"), upload.single("image"), (req, res) => {
   const { name, category, price, recipes, addons, addon_target } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : null;
   const insertMenu = db.prepare("INSERT INTO MENU (name, category, price, image, addon_target) VALUES (?, ?, ?, ?, ?)");
@@ -86,7 +86,7 @@ router.post("/", authenticate, requireAdmin, upload.single("image"), (req, res) 
     res.status(500).json({ error: "Failed to create menu item" });
   }
 });
-router.put("/:id", authenticate, requireAdmin, upload.single("image"), (req, res) => {
+router.put("/:id", authenticate, requirePermission("menu"), upload.single("image"), (req, res) => {
   const { id } = req.params;
   const { name, category, price, recipes, addons, addon_target } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : void 0;
@@ -133,7 +133,7 @@ router.put("/:id", authenticate, requireAdmin, upload.single("image"), (req, res
     res.status(500).json({ error: "Failed to update menu item" });
   }
 });
-router.delete("/:id", authenticate, requireAdmin, (req, res) => {
+router.delete("/:id", authenticate, requirePermission("menu"), (req, res) => {
   try {
     db.prepare("UPDATE MENU SET is_active = 0 WHERE menu_id = ?").run(req.params.id);
     res.json({ success: true });

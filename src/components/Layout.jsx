@@ -5,20 +5,21 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const isAdmin = user.role === "ADMIN";
-  const navItems = [
-    { name: "Dashboard", path: "/", icon: LayoutDashboard },
-    { name: "New Order", path: "/pos", icon: Coffee },
-    { name: "Open Bills", path: "/open-bills", icon: Receipt },
-    { name: "History", path: "/history", icon: History },
-    ...isAdmin ? [
-      { name: "Menu", path: "/menu", icon: Menu },
-      { name: "Inventory", path: "/inventory", icon: Package },
-      { name: "Promos", path: "/promo", icon: Tag },
-      { name: "Roles", path: "/roles", icon: Users },
-      { name: "Settings", path: "/settings", icon: Settings }
-    ] : []
+  const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : ["pos", "open-bills", "history"]);
+  
+  const allNavItems = [
+    { name: "Dashboard", path: "/", icon: LayoutDashboard, id: "dashboard" },
+    { name: "New Order", path: "/pos", icon: Coffee, id: "pos" },
+    { name: "Open Bills", path: "/open-bills", icon: Receipt, id: "open-bills" },
+    { name: "History", path: "/history", icon: History, id: "history" },
+    { name: "Menu", path: "/menu", icon: Menu, id: "menu" },
+    { name: "Inventory", path: "/inventory", icon: Package, id: "inventory" },
+    { name: "Promos", path: "/promo", icon: Tag, id: "promo" },
+    { name: "Roles", path: "/roles", icon: Users, id: "roles" },
+    { name: "Settings", path: "/settings", icon: Settings, id: "settings" }
   ];
+
+  const navItems = allNavItems.filter(item => item.id === "dashboard" || permissions.includes(item.id));
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

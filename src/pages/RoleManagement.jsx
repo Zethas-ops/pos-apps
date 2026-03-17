@@ -1,5 +1,17 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Shield } from "lucide-react";
+import { Plus, Edit2, Trash2, Shield, CheckSquare, Square } from "lucide-react";
+
+const AVAILABLE_FEATURES = [
+  { id: 'pos', label: 'New Order (POS)' },
+  { id: 'open-bills', label: 'Open Bills' },
+  { id: 'history', label: 'History' },
+  { id: 'menu', label: 'Menu Management' },
+  { id: 'inventory', label: 'Inventory' },
+  { id: 'promo', label: 'Promotions' },
+  { id: 'roles', label: 'Role Management' },
+  { id: 'settings', label: 'Settings' }
+];
+
 function RoleManagement() {
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -8,7 +20,8 @@ function RoleManagement() {
     name: "",
     username: "",
     password: "",
-    role: "USER"
+    role: "USER",
+    permissions: ["pos", "open-bills", "history"]
   });
   const [error, setError] = useState("");
   useEffect(() => {
@@ -84,8 +97,8 @@ function RoleManagement() {
         name: user.name || "",
         username: user.username,
         password: "",
-        // Don't populate password
-        role: user.role
+        role: user.role,
+        permissions: user.permissions || (user.role === 'ADMIN' ? AVAILABLE_FEATURES.map(f => f.id) : ["pos", "open-bills", "history"])
       });
     } else {
       resetForm();
@@ -99,7 +112,8 @@ function RoleManagement() {
       name: "",
       username: "",
       password: "",
-      role: "USER"
+      role: "USER",
+      permissions: ["pos", "open-bills", "history"]
     });
   };
   return <div className="space-y-6">
@@ -208,12 +222,47 @@ function RoleManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                 <select
     value={formData.role}
-    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+    onChange={(e) => {
+      const newRole = e.target.value;
+      setFormData({ 
+        ...formData, 
+        role: newRole,
+        permissions: newRole === 'ADMIN' ? AVAILABLE_FEATURES.map(f => f.id) : ["pos", "open-bills", "history"]
+      });
+    }}
     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
   >
                   <option value="USER">User (Cashier)</option>
                   <option value="ADMIN">Admin</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Feature Access</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {AVAILABLE_FEATURES.map((feature) => {
+                    const isChecked = formData.permissions.includes(feature.id);
+                    return (
+                      <div 
+                        key={feature.id}
+                        className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-gray-50 border border-transparent hover:border-gray-200"
+                        onClick={() => {
+                          const newPerms = isChecked 
+                            ? formData.permissions.filter(p => p !== feature.id)
+                            : [...formData.permissions, feature.id];
+                          setFormData({ ...formData, permissions: newPerms });
+                        }}
+                      >
+                        {isChecked ? (
+                          <CheckSquare className="w-5 h-5 text-indigo-600" />
+                        ) : (
+                          <Square className="w-5 h-5 text-gray-400" />
+                        )}
+                        <span className="text-sm text-gray-700">{feature.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
