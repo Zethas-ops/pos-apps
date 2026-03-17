@@ -8,6 +8,7 @@ function Login() {
   const navigate = useNavigate();
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log("LOGIN CLICKED");
     if (!username || !password) {
       setError("Username and password are required");
       return;
