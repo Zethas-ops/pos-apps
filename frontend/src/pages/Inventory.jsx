@@ -22,7 +22,7 @@ function Inventory() {
   // 🔥 FETCH INVENTORY
   const fetchInventory = async () => {
     const { data, error } = await supabase
-      .from("inventory")
+      .from("ingredients")
       .select("*")
       .order("ingredient_id", { ascending: true });
 
@@ -40,7 +40,7 @@ function Inventory() {
 
     try {
       const { error } = await supabase
-        .from("inventory")
+        .from("ingredients")
         .insert([
           {
             ingredient_name: formData.ingredient_name,
