@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import supabase from "../supabase";
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -11,23 +12,30 @@ function Login() {
       setError("Username and password are required");
       return;
     }
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Login failed");
-        return;
-      }
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/");
-    } catch (err) {
-      setError("An error occurred during login");
-    }
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("username", username)
+      .single();
+
+  if (error || !data) {
+    setError("User tidak ditemukan");
+    return;
+  }
+
+  if (data.password !== password) {
+    setError("Password salah");
+    return;
+  }
+
+  // ✅ login sukses
+  localStorage.setItem("user", JSON.stringify(data));
+  navigate("/");
+
+} catch (err) {
+  setError("An error occurred during login");
+}
   };
   return <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
