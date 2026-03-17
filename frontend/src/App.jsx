@@ -24,7 +24,7 @@ function PrivateRoute({ children, requirePermission }) {
   const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : ["pos", "open-bills", "history"]);
   
   if (requirePermission && !permissions.includes(requirePermission)) {
-    return <Navigate to="/" />;
+    return <Navigate to="/dashboard" />;
   }
   return children;
 }
