@@ -9,6 +9,9 @@ function Login() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  console.log("DATA:", data);
+  console.log("ERROR:", error);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!username || !password) {
