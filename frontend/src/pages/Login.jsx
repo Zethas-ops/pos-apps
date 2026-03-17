@@ -39,6 +39,8 @@ function Login() {
       console.log("LOGIN SUCCESS");
 
       localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("token", "login-success");
+
       navigate("/");
 
     } catch (err) {
