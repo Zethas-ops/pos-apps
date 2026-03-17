@@ -1,95 +1,105 @@
 import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Shield, CheckSquare, Square } from "lucide-react";
+import supabase from "../supabase";
 
 const AVAILABLE_FEATURES = [
-  { id: 'pos', label: 'New Order (POS)' },
-  { id: 'open-bills', label: 'Open Bills' },
-  { id: 'history', label: 'History' },
-  { id: 'menu', label: 'Menu Management' },
-  { id: 'inventory', label: 'Inventory' },
-  { id: 'promo', label: 'Promotions' },
-  { id: 'roles', label: 'Role Management' },
-  { id: 'settings', label: 'Settings' }
+  { id: "pos", label: "New Order (POS)" },
+  { id: "open-bills", label: "Open Bills" },
+  { id: "history", label: "History" },
+  { id: "menu", label: "Menu Management" },
+  { id: "inventory", label: "Inventory" },
+  { id: "promo", label: "Promotions" },
+  { id: "roles", label: "Role Management" },
+  { id: "settings", label: "Settings" },
 ];
 
 function RoleManagement() {
   const [users, setUsers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     username: "",
     password: "",
-    role: "USER",
-    permissions: ["pos", "open-bills", "history"]
+    role: "user",
+    permissions: ["pos", "open-bills", "history"],
   });
-  const [error, setError] = useState("");
+
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // ✅ GET USERS (SUPABASE)
   const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/users", {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
-    } catch (error2) {
-      console.error("Error fetching users:", error2);
+    const { data, error } = await supabase.from("users").select("*");
+
+    if (error) {
+      console.error(error);
+      return;
     }
+
+    setUsers(data);
   };
+
+  // ✅ ADD / UPDATE USER
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     try {
-      const token = localStorage.getItem("token");
-      const url = editingUser ? `/api/users/${editingUser.id}` : "/api/users";
-      const method = editingUser ? "PUT" : "POST";
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-      if (response.ok) {
-        setIsModalOpen(false);
-        fetchUsers();
-        resetForm();
+      if (editingUser) {
+        // UPDATE
+        const { error } = await supabase
+          .from("users")
+          .update({
+            name: formData.name,
+            username: formData.username,
+            role: formData.role.toLowerCase(),
+            permissions: formData.permissions,
+            ...(formData.password && { password: formData.password }),
+          })
+          .eq("id", editingUser.id);
+
+        if (error) throw error;
       } else {
-        const data = await response.json();
-        setError(data.error || "Failed to save user");
+        // INSERT
+        const { error } = await supabase.from("users").insert([
+          {
+            name: formData.name,
+            username: formData.username,
+            password: formData.password,
+            role: formData.role.toLowerCase(),
+            permissions: formData.permissions,
+          },
+        ]);
+
+        if (error) throw error;
       }
-    } catch (error2) {
-      setError("An error occurred while saving");
+
+      setIsModalOpen(false);
+      fetchUsers();
+      resetForm();
+    } catch (err) {
+      setError(err.message || "Gagal menyimpan user");
     }
   };
+
+  // ✅ DELETE
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/users/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        fetchUsers();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Failed to delete user");
-      }
-    } catch (error2) {
-      console.error("Error deleting user:", error2);
+    if (!confirm("Yakin hapus user?")) return;
+
+    const { error } = await supabase.from("users").delete().eq("id", id);
+
+    if (error) {
+      alert(error.message);
+      return;
     }
+
+    fetchUsers();
   };
+
   const openModal = (user) => {
     if (user) {
       setEditingUser(user);
@@ -98,193 +108,201 @@ function RoleManagement() {
         username: user.username,
         password: "",
         role: user.role,
-        permissions: user.permissions || (user.role === 'ADMIN' ? AVAILABLE_FEATURES.map(f => f.id) : ["pos", "open-bills", "history"])
+        permissions:
+          user.permissions ||
+          (user.role === "admin"
+            ? AVAILABLE_FEATURES.map((f) => f.id)
+            : ["pos", "open-bills", "history"]),
       });
     } else {
       resetForm();
     }
+
     setError("");
     setIsModalOpen(true);
   };
+
   const resetForm = () => {
     setEditingUser(null);
     setFormData({
       name: "",
       username: "",
       password: "",
-      role: "USER",
-      permissions: ["pos", "open-bills", "history"]
+      role: "user",
+      permissions: ["pos", "open-bills", "history"],
     });
   };
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
+      {/* HEADER */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Role Management</h1>
+        <h1 className="text-2xl font-bold">Role Management</h1>
         <button
-    onClick={() => openModal()}
-    className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700"
-  >
-          <Plus className="w-5 h-5" />
-          Add User
+          onClick={() => openModal()}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex gap-2"
+        >
+          <Plus size={18} /> Add User
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      {/* TABLE */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 text-left">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="p-3">Name</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th className="text-right pr-4">Action</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{user.name || "-"}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{user.username}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === "ADMIN" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800"}`}>
-                    {user.role === "ADMIN" && <Shield className="w-3 h-3 mr-1" />}
-                    {user.role}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-    onClick={() => openModal(user)}
-    className="text-indigo-600 hover:text-indigo-900 mr-4"
-  >
-                    <Edit2 className="w-5 h-5" />
-                  </button>
-                  <button
-    onClick={() => handleDelete(user.id)}
-    className="text-red-600 hover:text-red-900"
-  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </td>
-              </tr>)}
+
+          <tbody>
+            {users.map((user) => {
+              const isAdmin = user.role === "admin";
+
+              return (
+                <tr key={user.id} className="border-t">
+                  <td className="p-3">{user.name || "-"}</td>
+                  <td>{user.username}</td>
+                  <td>
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${
+                        isAdmin
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {isAdmin && <Shield size={12} className="inline mr-1" />}
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="text-right pr-4">
+                    <button
+                      onClick={() => openModal(user)}
+                      className="mr-3 text-indigo-600"
+                    >
+                      <Edit2 size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="text-red-600"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {isModalOpen && <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">
-              {editingUser ? "Edit User" : "Add New User"}
+      {/* MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-xl w-full max-w-md">
+            <h2 className="text-lg font-bold mb-4">
+              {editingUser ? "Edit User" : "Add User"}
             </h2>
-            
-            {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+
+            {error && (
+              <div className="bg-red-100 text-red-600 p-2 mb-3 rounded">
                 {error}
-              </div>}
+              </div>
+            )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-    type="text"
-    required
-    value={formData.name}
-    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-    placeholder="Full Name"
-  />
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <input
+                placeholder="Name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="w-full border p-2 rounded"
+              />
+
+              <input
+                placeholder="Username"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                className="w-full border p-2 rounded"
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className="w-full border p-2 rounded"
+              />
+
+              <select
+                value={formData.role}
+                onChange={(e) => {
+                  const role = e.target.value;
+                  setFormData({
+                    ...formData,
+                    role,
+                    permissions:
+                      role === "admin"
+                        ? AVAILABLE_FEATURES.map((f) => f.id)
+                        : ["pos", "open-bills", "history"],
+                  });
+                }}
+                className="w-full border p-2 rounded"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+
+              {/* PERMISSIONS */}
+              <div className="grid grid-cols-2 gap-2">
+                {AVAILABLE_FEATURES.map((f) => {
+                  const checked = formData.permissions.includes(f.id);
+
+                  return (
+                    <div
+                      key={f.id}
+                      className="flex items-center gap-2 cursor-pointer"
+                      onClick={() => {
+                        const newPerms = checked
+                          ? formData.permissions.filter((p) => p !== f.id)
+                          : [...formData.permissions, f.id];
+
+                        setFormData({ ...formData, permissions: newPerms });
+                      }}
+                    >
+                      {checked ? (
+                        <CheckSquare size={18} />
+                      ) : (
+                        <Square size={18} />
+                      )}
+                      <span>{f.label}</span>
+                    </div>
+                  );
+                })}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                <input
-    type="text"
-    required
-    value={formData.username}
-    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-  />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password {editingUser && <span className="text-gray-400 font-normal">(Leave blank to keep current)</span>}
-                </label>
-                <input
-    type="password"
-    required={!editingUser}
-    value={formData.password}
-    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-  />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                <select
-    value={formData.role}
-    onChange={(e) => {
-      const newRole = e.target.value;
-      setFormData({ 
-        ...formData, 
-        role: newRole,
-        permissions: newRole === 'ADMIN' ? AVAILABLE_FEATURES.map(f => f.id) : ["pos", "open-bills", "history"]
-      });
-    }}
-    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-  >
-                  <option value="USER">User (Cashier)</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Feature Access</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {AVAILABLE_FEATURES.map((feature) => {
-                    const isChecked = formData.permissions.includes(feature.id);
-                    return (
-                      <div 
-                        key={feature.id}
-                        className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-gray-50 border border-transparent hover:border-gray-200"
-                        onClick={() => {
-                          const newPerms = isChecked 
-                            ? formData.permissions.filter(p => p !== feature.id)
-                            : [...formData.permissions, feature.id];
-                          setFormData({ ...formData, permissions: newPerms });
-                        }}
-                      >
-                        {isChecked ? (
-                          <CheckSquare className="w-5 h-5 text-indigo-600" />
-                        ) : (
-                          <Square className="w-5 h-5 text-gray-400" />
-                        )}
-                        <span className="text-sm text-gray-700">{feature.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-    type="button"
-    onClick={() => setIsModalOpen(false)}
-    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-  >
+              <div className="flex justify-end gap-2 pt-3">
+                <button type="button" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </button>
-                <button
-    type="submit"
-    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-  >
-                  {editingUser ? "Save Changes" : "Add User"}
+                <button className="bg-indigo-600 text-white px-3 py-1 rounded">
+                  Save
                 </button>
               </div>
             </form>
           </div>
-        </div>}
-    </div>;
+        </div>
+      )}
+    </div>
+  );
 }
-export {
-  RoleManagement as default
-};
+
+export default RoleManagement;
