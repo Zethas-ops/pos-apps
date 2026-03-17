@@ -55,8 +55,9 @@ function Inventory() {
       setFormData({ ingredient_name: "", unit: "", current_stock: "" });
       fetchInventory();
     } catch (err) {
-      alert("Error adding ingredient");
-    }
+  console.error(err);
+  alert(err.message);
+}
   };
 
   // 🔥 ADJUST STOCK
@@ -68,7 +69,7 @@ function Inventory() {
         Number(selectedItem.current_stock) + Number(adjustAmount);
 
       const { error } = await supabase
-        .from("inventory")
+        .from("ingredients")
         .update({ current_stock: newStock })
         .eq("ingredient_id", selectedItem.ingredient_id);
 
