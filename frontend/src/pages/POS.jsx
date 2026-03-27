@@ -151,12 +151,13 @@ function POS() {
   }, [cart, promos, menu]);
   const fetchData = async () => {
     try {
-      const [menuRes, profileRes, promoRes, recipesRes, ingredientsRes] = await Promise.all([
+      const [menuRes, profileRes, promoRes, recipesRes, ingredientsRes, addonsRes] = await Promise.all([
         supabase.from('menu').select('*'),
         supabase.from('store_profile').select('*').single(),
         supabase.from('promos').select('*'),
         supabase.from('recipes').select('*'),
-        supabase.from('ingredients').select('*')
+        supabase.from('ingredients').select('*'),
+        supabase.from('menu_addons').select('*')
       ]);
 
       if (menuRes.error) throw menuRes.error;
@@ -192,8 +193,17 @@ function POS() {
         };
       });
 
-      setMenu(menuData);
-      const cats = Array.from(new Set(menuData.map((item) => item.category)));
+      const menuDataWithAddons = menuData.map(item => {
+        const addonIds = addonsRes.data?.filter(a => a.menu_id === item.menu_id).map(a => a.addon_menu_id) || [];
+        const itemAddons = menuData.filter(m => addonIds.includes(m.menu_id));
+        return {
+          ...item,
+          addons: itemAddons
+        };
+      });
+
+      setMenu(menuDataWithAddons);
+      const cats = Array.from(new Set(menuDataWithAddons.map((item) => item.category)));
       setCategories(["All", ...cats]);
       
       if (!profileRes.error && profileRes.data) {
@@ -403,8 +413,7 @@ function POS() {
           discount: totals.discount,
           cash_amount: paymentMethod === "Cash" ? Number(cashAmount) : totals.total,
           change_amount: paymentMethod === "Cash" ? Number(cashAmount) - totals.total : 0,
-          total_price: totals.total,
-          status: 'COMPLETED'
+          total_price: totals.total
         }])
         .select()
         .single();
@@ -480,9 +489,10 @@ function POS() {
 
       // 4. If this was an open bill, update its status
       if (openBillId) {
+        await supabase.from('open_bill_items').delete().eq('bill_id', openBillId);
         await supabase
           .from('open_bills')
-          .update({ status: 'CLOSED' })
+          .delete()
           .eq('bill_id', openBillId);
       }
 
@@ -638,8 +648,7 @@ function POS() {
             subtotal: totals.subtotal,
             tax: totals.tax,
             discount: totals.discount,
-            total_price: totals.total,
-            status: 'OPEN'
+            total_price: totals.total
           }])
           .select()
           .single();

@@ -15,7 +15,6 @@ function OpenBills() {
       const { data, error } = await supabase
         .from('open_bills')
         .select('*, open_bill_items(*)')
-        .eq('status', 'OPEN')
         .order('created_time', { ascending: false });
         
       if (error) throw error;
