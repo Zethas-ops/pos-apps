@@ -20,7 +20,7 @@ function Login() {
       // Fetch user from Supabase
       const { data: user, error: fetchError } = await supabase
         .from('users')
-        .select('*')
+        .select('id, username, role, permissions, password')
         .eq('username', username)
         .single();
 
