@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Shield, CheckSquare, Square } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import bcrypt from "bcryptjs";
 
 const AVAILABLE_FEATURES = [
   { id: 'pos', label: 'New Order (POS)' },
@@ -44,9 +43,7 @@ function RoleManagement() {
     try {
       const payload = { ...formData };
       
-      if (payload.password) {
-        payload.password = bcrypt.hashSync(payload.password, 10);
-      } else {
+      if (!payload.password) {
         delete payload.password;
       }
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import bcrypt from "bcryptjs";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -20,7 +19,7 @@ function Login() {
       // Fetch user from Supabase
       const { data: user, error: fetchError } = await supabase
         .from('users')
-        .select('id, username, role, permissions, password')
+        .select('*')
         .eq('username', username)
         .single();
 
@@ -30,8 +29,7 @@ function Login() {
       }
 
       // Verify password
-      const isValid = bcrypt.compareSync(password, user.password);
-      if (!isValid) {
+      if (password !== user.password) {
         setError("Invalid username or password");
         return;
       }
