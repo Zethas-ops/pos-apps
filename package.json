@@ -12,6 +12,7 @@
     "lint": "npm run lint --workspace=frontend"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0"
   }
 }
