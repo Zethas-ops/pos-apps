@@ -21,7 +21,7 @@ function PrivateRoute({ children, requirePermission }) {
     return <Navigate to="/login" />;
   }
   const user = JSON.parse(userStr);
-  const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : ["pos", "open-bills", "history"]);
+  const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : []);
   
   if (requirePermission && !permissions.includes(requirePermission)) {
     return <Navigate to="/" />;

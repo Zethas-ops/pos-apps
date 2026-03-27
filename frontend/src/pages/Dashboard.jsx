@@ -2,15 +2,21 @@ import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { DollarSign, Calendar, Download, Clock, TrendingUp, ShoppingBag } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
+import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz";
 import { supabase } from "../lib/supabase";
+
+const TIMEZONE = 'Asia/Jakarta';
 
 function Dashboard() {
   const [metrics, setMetrics] = useState({});
   const [charts, setCharts] = useState({ salesChart: [], hourlyTraffic: [], paymentMethods: [], topSelling: [] });
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("last7days");
-  const [startDate, setStartDate] = useState(format(subDays(/* @__PURE__ */ new Date(), 6), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState(format(/* @__PURE__ */ new Date(), "yyyy-MM-dd"));
+  
+  // Initialize with UTC+7 dates
+  const initZonedNow = toZonedTime(new Date(), TIMEZONE);
+  const [startDate, setStartDate] = useState(format(subDays(initZonedNow, 6), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(format(initZonedNow, "yyyy-MM-dd"));
   const [paymentMethod, setPaymentMethod] = useState("");
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
@@ -21,15 +27,17 @@ function Dashboard() {
       setLoading(true);
       
       const now = new Date();
-      const todayStart = startOfDay(now).toISOString();
-      const todayEnd = endOfDay(now).toISOString();
-      const weekStart = startOfWeek(now).toISOString();
-      const weekEnd = endOfWeek(now).toISOString();
-      const monthStart = startOfMonth(now).toISOString();
-      const monthEnd = endOfMonth(now).toISOString();
+      const zonedNow = toZonedTime(now, TIMEZONE);
+      
+      const todayStart = fromZonedTime(startOfDay(zonedNow), TIMEZONE).toISOString();
+      const todayEnd = fromZonedTime(endOfDay(zonedNow), TIMEZONE).toISOString();
+      const weekStart = fromZonedTime(startOfWeek(zonedNow), TIMEZONE).toISOString();
+      const weekEnd = fromZonedTime(endOfWeek(zonedNow), TIMEZONE).toISOString();
+      const monthStart = fromZonedTime(startOfMonth(zonedNow), TIMEZONE).toISOString();
+      const monthEnd = fromZonedTime(endOfMonth(zonedNow), TIMEZONE).toISOString();
 
-      const start = `${startDate}T00:00:00.000Z`;
-      const end = `${endDate}T23:59:59.999Z`;
+      const start = fromZonedTime(`${startDate}T00:00:00.000`, TIMEZONE).toISOString();
+      const end = fromZonedTime(`${endDate}T23:59:59.999`, TIMEZONE).toISOString();
 
       // 1. Filtered Transactions (for charts and filtered metrics)
       let filteredQuery = supabase
@@ -86,7 +94,9 @@ function Dashboard() {
       // Calculate Charts
       const salesByDay = {};
       filteredTxns.forEach(t => {
-        const day = t.date.split('T')[0].substring(5); // MM-DD
+        // Convert UTC date to UTC+7 to group by day correctly
+        const tZoned = toZonedTime(new Date(t.date), TIMEZONE);
+        const day = format(tZoned, "MM-dd");
         if (!salesByDay[day]) salesByDay[day] = 0;
         salesByDay[day] += Number(t.total_price);
       });
@@ -97,7 +107,9 @@ function Dashboard() {
 
       const trafficByHour = {};
       todayTxns.forEach(t => {
-        const hour = new Date(t.date).getHours().toString().padStart(2, '0') + ':00';
+        // Convert UTC date to UTC+7 to group by hour correctly
+        const tZoned = toZonedTime(new Date(t.date), TIMEZONE);
+        const hour = format(tZoned, "HH:00");
         if (!trafficByHour[hour]) trafficByHour[hour] = { orders: 0, revenue: 0 };
         trafficByHour[hour].orders += 1;
         trafficByHour[hour].revenue += Number(t.total_price);
@@ -155,7 +167,7 @@ function Dashboard() {
   const handleTimeRangeChange = (e) => {
     const range = e.target.value;
     setTimeRange(range);
-    const today = /* @__PURE__ */ new Date();
+    const today = toZonedTime(new Date(), TIMEZONE);
     let start = today;
     let end = today;
     switch (range) {
@@ -186,15 +198,17 @@ function Dashboard() {
     setEndDate(format(end, "yyyy-MM-dd"));
   };
   useEffect(() => {
-    fetchDashboard();
-  }, [startDate, endDate, paymentMethod]);
+    if (timeRange !== "custom") {
+      fetchDashboard();
+    }
+  }, [startDate, endDate, paymentMethod, timeRange]);
   const handleApplyFilter = () => {
     fetchDashboard();
   };
   const handleExportCSV = async () => {
     try {
-      const start = `${startDate}T00:00:00.000Z`;
-      const end = `${endDate}T23:59:59.999Z`;
+      const start = fromZonedTime(`${startDate}T00:00:00.000`, TIMEZONE).toISOString();
+      const end = fromZonedTime(`${endDate}T23:59:59.999`, TIMEZONE).toISOString();
       
       const { data, error } = await supabase
         .from('transactions')

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Edit, Power } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "../lib/supabase";
+
 function Promo() {
   const [promos, setPromos] = useState([]);
   const [menu, setMenu] = useState([]);
@@ -29,24 +31,24 @@ function Promo() {
     fetchData();
   }, []);
   const fetchData = async () => {
-    const token = localStorage.getItem("token");
     try {
       const [promoRes, menuRes] = await Promise.all([
-        fetch("/api/promo", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("/api/menu", { headers: { Authorization: `Bearer ${token}` } })
+        supabase.from('promos').select('*').order('promo_id', { ascending: false }),
+        supabase.from('menu').select('*')
       ]);
-      setPromos(await promoRes.json());
-      setMenu(await menuRes.json());
+      
+      if (promoRes.error) throw promoRes.error;
+      if (menuRes.error) throw menuRes.error;
+      
+      setPromos(promoRes.data || []);
+      setMenu(menuRes.data || []);
     } catch (err) {
-      console.error("Failed to fetch data");
+      console.error("Failed to fetch data", err);
     }
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
     try {
-      const url = editId ? `/api/promo/${editId}` : "/api/promo";
-      const method = editId ? "PUT" : "POST";
       const payload = { ...formData };
       if (payload.time_filter === "Custom Time") {
         if (!payload.custom_start_time || !payload.custom_end_time) {
@@ -55,15 +57,32 @@ function Promo() {
         }
         payload.time_filter = `Custom Time (${payload.custom_start_time} - ${payload.custom_end_time})`;
       }
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
+      
+      // Clean up empty strings to null for numeric fields
+      const numericFields = ['discount_percent', 'discount_amount', 'min_buy_qty', 'free_qty', 'min_buy_menu_id', 'free_menu_id', 'min_nominal'];
+      numericFields.forEach(field => {
+        if (payload[field] === "") {
+          payload[field] = null;
+        }
       });
-      if (!res.ok) throw new Error("Failed to save promo");
+      
+      // Remove custom time fields as they are not in the database schema
+      delete payload.custom_start_time;
+      delete payload.custom_end_time;
+
+      if (editId) {
+        const { error } = await supabase
+          .from('promos')
+          .update(payload)
+          .eq('promo_id', editId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('promos')
+          .insert([payload]);
+        if (error) throw error;
+      }
+      
       setShowModal(false);
       setEditId(null);
       setFormData({
@@ -86,35 +105,37 @@ function Promo() {
       });
       fetchData();
     } catch (err) {
-      alert("Error saving promo");
+      alert("Error saving promo: " + err.message);
     }
   };
   const confirmDelete = async () => {
     if (!deleteId) return;
-    const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`/api/promo/${deleteId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to delete");
+      const { error } = await supabase
+        .from('promos')
+        .delete()
+        .eq('promo_id', deleteId);
+      if (error) throw error;
       setDeleteId(null);
       fetchData();
     } catch (err) {
-      alert("Error deleting promo");
+      alert("Error deleting promo: " + err.message);
     }
   };
   const handleToggle = async (id) => {
-    const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`/api/promo/${id}/toggle`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to toggle");
+      const promo = promos.find(p => p.promo_id === id);
+      if (!promo) return;
+      
+      const { error } = await supabase
+        .from('promos')
+        .update({ is_active: promo.is_active === 1 ? 0 : 1 })
+        .eq('promo_id', id);
+        
+      if (error) throw error;
       fetchData();
     } catch (err) {
-      alert("Error toggling promo");
+      alert("Error toggling promo: " + err.message);
     }
   };
   const handleEdit = (promo) => {

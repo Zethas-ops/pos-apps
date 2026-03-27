@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Search, Printer, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "../lib/supabase";
+
 function History() {
   const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState("");
@@ -10,10 +12,24 @@ function History() {
     fetchHistory();
   }, []);
   const fetchHistory = async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch("/api/dashboard/history", { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    setTransactions(data);
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*, transaction_items(*)')
+        .order('date', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Map the data to match the expected format
+      const formattedData = data.map(t => ({
+        ...t,
+        items: t.transaction_items || []
+      }));
+      
+      setTransactions(formattedData);
+    } catch (err) {
+      console.error("Error fetching history:", err);
+    }
   };
   const handleReprint = (transaction) => {
     const receiptContent = `

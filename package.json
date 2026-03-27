@@ -1,0 +1,17 @@
+{
+  "name": "pos-root",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=frontend",
+    "preview": "npm run preview --workspace=frontend",
+    "clean": "npm run clean --workspace=frontend",
+    "lint": "npm run lint --workspace=frontend"
+  },
+  "dependencies": {
+    "date-fns-tz": "^3.2.0"
+  }
+}

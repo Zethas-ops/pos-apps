@@ -11,7 +11,7 @@ CREATE TABLE users (
   username VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL, -- In production, use Supabase Auth instead of storing passwords!
   role VARCHAR(50) NOT NULL DEFAULT 'USER',
-  permissions JSONB DEFAULT '["pos", "open-bills", "history"]'::jsonb
+  permissions JSONB DEFAULT '[]'::jsonb
 );
 
 -- Insert default admin user (password: admin123 - hashed with bcrypt in the app, but for direct insert we can just put a dummy or use the app to create)

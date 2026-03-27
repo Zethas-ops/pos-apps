@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Edit2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Settings2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 function Inventory() {
   const [inventory, setInventory] = useState([]);
   const [search, setSearch] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     ingredient_name: "",
     unit: "",
@@ -23,7 +24,7 @@ function Inventory() {
       setInventory(data);
     }
   };
-  const handleAddSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const payload = {
@@ -32,14 +33,36 @@ function Inventory() {
         current_stock: parseFloat(formData.current_stock) || 0
       };
       
-      const { error } = await supabase.from('ingredients').insert([payload]);
+      let error;
+      if (isEditing && selectedItem) {
+        const { error: updateError } = await supabase
+          .from('ingredients')
+          .update(payload)
+          .eq('ingredient_id', selectedItem.ingredient_id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase.from('ingredients').insert([payload]);
+        error = insertError;
+      }
       
       if (error) throw error;
-      setShowAddModal(false);
+      setShowModal(false);
       setFormData({ ingredient_name: "", unit: "", current_stock: "" });
+      setIsEditing(false);
+      setSelectedItem(null);
       fetchInventory();
     } catch (err) {
-      alert("Error adding ingredient: " + err.message);
+      alert("Error saving ingredient: " + err.message);
+    }
+  };
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this ingredient?")) return;
+    try {
+      const { error } = await supabase.from('ingredients').delete().eq('ingredient_id', id);
+      if (error) throw error;
+      fetchInventory();
+    } catch (err) {
+      alert("Error deleting ingredient: " + err.message);
     }
   };
   const handleAdjustSubmit = async (e) => {
@@ -79,7 +102,12 @@ function Inventory() {
   />
           </div>
           <button
-    onClick={() => setShowAddModal(true)}
+    onClick={() => {
+      setIsEditing(false);
+      setSelectedItem(null);
+      setFormData({ ingredient_name: "", unit: "", current_stock: "" });
+      setShowModal(true);
+    }}
     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center space-x-2 transition-colors shadow-md shadow-blue-200"
   >
             <Plus size={20} />
@@ -109,16 +137,39 @@ function Inventory() {
                   </span>
                 </td>
                 <td className="p-4 text-gray-600">{item.unit}</td>
-                <td className="p-4 text-right">
+                <td className="p-4 text-right space-x-2">
                   <button
     onClick={() => {
       setSelectedItem(item);
       setShowAdjustModal(true);
     }}
-    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center"
+    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors inline-flex items-center"
     title="Adjust Stock"
   >
+                    <Settings2 size={20} />
+                  </button>
+                  <button
+    onClick={() => {
+      setSelectedItem(item);
+      setIsEditing(true);
+      setFormData({
+        ingredient_name: item.ingredient_name,
+        unit: item.unit,
+        current_stock: item.current_stock
+      });
+      setShowModal(true);
+    }}
+    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center"
+    title="Edit Detail"
+  >
                     <Edit2 size={20} />
+                  </button>
+                  <button
+    onClick={() => handleDelete(item.ingredient_id)}
+    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center"
+    title="Delete"
+  >
+                    <Trash2 size={20} />
                   </button>
                 </td>
               </tr>)}
@@ -132,14 +183,14 @@ function Inventory() {
       </div>
 
       {
-    /* Add Modal */
+    /* Add/Edit Modal */
   }
-      {showAddModal && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+      {showModal && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
             <div className="p-6 border-b bg-gray-50">
-              <h2 className="text-2xl font-bold text-gray-800">Add Ingredient</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{isEditing ? "Edit Ingredient" : "Add Ingredient"}</h2>
             </div>
-            <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Name *</label>
                 <input
@@ -173,7 +224,11 @@ function Inventory() {
               <div className="flex justify-end space-x-3 pt-4">
                 <button
     type="button"
-    onClick={() => setShowAddModal(false)}
+    onClick={() => {
+      setShowModal(false);
+      setIsEditing(false);
+      setSelectedItem(null);
+    }}
     className="px-6 py-3 font-bold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
   >
                   Cancel

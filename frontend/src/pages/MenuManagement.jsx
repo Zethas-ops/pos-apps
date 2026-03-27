@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Edit, Trash2, Image as ImageIcon, Search } from "lucide-react";
+import { supabase } from "../lib/supabase";
+
 function MenuManagement() {
   const [menu, setMenu] = useState([]);
   const [ingredients, setIngredients] = useState([]);
@@ -23,46 +25,128 @@ function MenuManagement() {
     fetchData();
   }, []);
   const fetchData = async () => {
-    const token = localStorage.getItem("token");
-    const [menuRes, invRes] = await Promise.all([
-      fetch("/api/menu", { headers: { Authorization: `Bearer ${token}` } }),
-      fetch("/api/inventory", { headers: { Authorization: `Bearer ${token}` } })
-    ]);
-    const menuData = await menuRes.json();
-    setMenu(menuData);
-    setIngredients(await invRes.json());
-    const uniqueCategories = Array.from(new Set(menuData.map((item) => item.category)));
-    const mergedCategories = Array.from(/* @__PURE__ */ new Set(["Coffee", "Non Coffee", "Food", "Add-Ons", ...uniqueCategories]));
-    setCategories(mergedCategories);
+    try {
+      const [menuRes, invRes, recipesRes, addonsRes] = await Promise.all([
+        supabase.from('menu').select('*').order('menu_id', { ascending: true }),
+        supabase.from('ingredients').select('*').order('ingredient_id', { ascending: true }),
+        supabase.from('recipes').select('*'),
+        supabase.from('menu_addons').select('*')
+      ]);
+
+      if (menuRes.error) console.error("Menu fetch error:", menuRes.error);
+      if (invRes.error) console.error("Ingredients fetch error:", invRes.error);
+      if (recipesRes.error) console.error("Recipes fetch error:", recipesRes.error);
+      if (addonsRes.error) console.error("Addons fetch error:", addonsRes.error);
+
+      const menuData = (menuRes.data || []).map(item => ({
+        ...item,
+        recipes: recipesRes.data?.filter(r => r.menu_id === item.menu_id) || [],
+        addons: addonsRes.data?.filter(a => a.menu_id === item.menu_id).map(a => ({ menu_id: a.addon_menu_id })) || []
+      }));
+
+      setMenu(menuData);
+      setIngredients(invRes.data || []);
+      
+      const uniqueCategories = Array.from(new Set(menuData.map((item) => item.category)));
+      const mergedCategories = Array.from(new Set(["Coffee", "Non Coffee", "Food", "Add-Ons", ...uniqueCategories]));
+      setCategories(mergedCategories);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    }
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
     const validRecipes = formData.recipes.filter((r) => r.ingredient_id && r.usage_amount);
     if (validRecipes.length === 0) {
       alert("Please add at least one ingredient for this menu item.");
       return;
     }
     const finalCategory = showNewCategoryInput && newCategory.trim() !== "" ? newCategory.trim() : formData.category;
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("category", finalCategory);
-    data.append("price", formData.price);
-    if (finalCategory === "Add-Ons") {
-      data.append("addon_target", formData.addon_target);
-    }
-    if (formData.image) data.append("image", formData.image);
-    data.append("recipes", JSON.stringify(validRecipes));
-    data.append("addons", JSON.stringify(formData.addons));
+    
     try {
-      const url = editId ? `/api/menu/${editId}` : "/api/menu";
-      const method = editId ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${token}` },
-        body: data
-      });
-      if (!res.ok) throw new Error("Failed to save menu");
+      let imageUrl = null;
+      
+      // Handle image upload to Supabase Storage if an image was selected
+      if (formData.image) {
+        const fileExt = formData.image.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+        
+        // Note: This requires a 'menu-images' bucket to be created in Supabase
+        // If it fails, we'll just continue without the image
+        try {
+          const { error: uploadError, data } = await supabase.storage
+            .from('menu-images')
+            .upload(filePath, formData.image);
+            
+          if (!uploadError && data) {
+            const { data: publicUrlData } = supabase.storage
+              .from('menu-images')
+              .getPublicUrl(filePath);
+            imageUrl = publicUrlData.publicUrl;
+          }
+        } catch (uploadErr) {
+          console.warn("Image upload failed, continuing without image", uploadErr);
+        }
+      }
+
+      const menuPayload = {
+        name: formData.name,
+        category: finalCategory,
+        price: parseFloat(formData.price),
+        addon_target: finalCategory === "Add-Ons" ? formData.addon_target : null
+      };
+      
+      // Only update image if a new one was uploaded
+      if (imageUrl) {
+        menuPayload.image = imageUrl;
+      }
+
+      let currentMenuId = editId;
+
+      if (editId) {
+        // Update existing menu
+        const { error: updateError } = await supabase
+          .from('menu')
+          .update(menuPayload)
+          .eq('menu_id', editId);
+          
+        if (updateError) throw updateError;
+        
+        // Delete old recipes and addons
+        await supabase.from('recipes').delete().eq('menu_id', editId);
+        await supabase.from('menu_addons').delete().eq('menu_id', editId);
+      } else {
+        // Insert new menu
+        const { data: newMenu, error: insertError } = await supabase
+          .from('menu')
+          .insert([menuPayload])
+          .select()
+          .single();
+          
+        if (insertError) throw insertError;
+        currentMenuId = newMenu.menu_id;
+      }
+
+      // Insert recipes
+      if (validRecipes.length > 0) {
+        const recipesPayload = validRecipes.map(r => ({
+          menu_id: currentMenuId,
+          ingredient_id: parseInt(r.ingredient_id),
+          usage_amount: parseFloat(r.usage_amount)
+        }));
+        await supabase.from('recipes').insert(recipesPayload);
+      }
+
+      // Insert addons
+      if (formData.addons && formData.addons.length > 0) {
+        const addonsPayload = formData.addons.map(addonId => ({
+          menu_id: currentMenuId,
+          addon_menu_id: parseInt(addonId)
+        }));
+        await supabase.from('menu_addons').insert(addonsPayload);
+      }
+
       setShowModal(false);
       setEditId(null);
       setShowNewCategoryInput(false);
@@ -70,22 +154,18 @@ function MenuManagement() {
       setFormData({ name: "", category: "Coffee", price: "", image: null, addon_target: "All", recipes: [], addons: [] });
       fetchData();
     } catch (err) {
-      alert("Error saving menu");
+      alert("Error saving menu: " + err.message);
     }
   };
   const confirmDelete = async () => {
     if (!deleteId) return;
-    const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`/api/menu/${deleteId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to delete");
+      const { error } = await supabase.from('menu').delete().eq('menu_id', deleteId);
+      if (error) throw error;
       setDeleteId(null);
       fetchData();
     } catch (err) {
-      alert("Error deleting menu");
+      alert("Error deleting menu: " + err.message);
     }
   };
   const handleEdit = (item) => {
@@ -266,7 +346,7 @@ function MenuManagement() {
     type="file"
     accept="image/*"
     onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
-    className="w-full p-2 border border-gray-300 rounded-xl"
+    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none"
   />
                 </div>
               </div>

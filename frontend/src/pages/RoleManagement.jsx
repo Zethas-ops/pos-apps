@@ -23,7 +23,7 @@ function RoleManagement() {
     username: "",
     password: "",
     role: "USER",
-    permissions: ["pos", "open-bills", "history"]
+    permissions: []
   });
   const [error, setError] = useState("");
   useEffect(() => {
@@ -91,12 +91,26 @@ function RoleManagement() {
   const openModal = (user) => {
     if (user) {
       setEditingUser(user);
+      let perms = [];
+      if (user.permissions) {
+        if (typeof user.permissions === 'string') {
+          try {
+            perms = JSON.parse(user.permissions);
+          } catch (e) {
+            perms = user.permissions.split(',').map(s => s.trim());
+          }
+        } else if (Array.isArray(user.permissions)) {
+          perms = user.permissions;
+        }
+      } else if (user.role === 'ADMIN') {
+        perms = AVAILABLE_FEATURES.map(f => f.id);
+      }
       setFormData({
         name: user.name || "",
         username: user.username,
         password: "",
         role: user.role,
-        permissions: user.permissions || (user.role === 'ADMIN' ? AVAILABLE_FEATURES.map(f => f.id) : ["pos", "open-bills", "history"])
+        permissions: perms
       });
     } else {
       resetForm();
@@ -111,7 +125,7 @@ function RoleManagement() {
       username: "",
       password: "",
       role: "USER",
-      permissions: ["pos", "open-bills", "history"]
+      permissions: []
     });
   };
   return <div className="space-y-6">
@@ -225,7 +239,7 @@ function RoleManagement() {
       setFormData({ 
         ...formData, 
         role: newRole,
-        permissions: newRole === 'ADMIN' ? AVAILABLE_FEATURES.map(f => f.id) : ["pos", "open-bills", "history"]
+        permissions: newRole === 'ADMIN' ? AVAILABLE_FEATURES.map(f => f.id) : []
       });
     }}
     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -239,15 +253,16 @@ function RoleManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Feature Access</label>
                 <div className="grid grid-cols-2 gap-2">
                   {AVAILABLE_FEATURES.map((feature) => {
-                    const isChecked = formData.permissions.includes(feature.id);
+                    const currentPerms = Array.isArray(formData.permissions) ? formData.permissions : [];
+                    const isChecked = currentPerms.includes(feature.id);
                     return (
                       <div 
                         key={feature.id}
                         className="flex items-center gap-2 cursor-pointer p-2 rounded hover:bg-gray-50 border border-transparent hover:border-gray-200"
                         onClick={() => {
                           const newPerms = isChecked 
-                            ? formData.permissions.filter(p => p !== feature.id)
-                            : [...formData.permissions, feature.id];
+                            ? currentPerms.filter(p => p !== feature.id)
+                            : [...currentPerms, feature.id];
                           setFormData({ ...formData, permissions: newPerms });
                         }}
                       >

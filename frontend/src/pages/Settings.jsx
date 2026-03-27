@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
+import { supabase } from "../lib/supabase";
+
 function Settings() {
   const [profile, setProfile] = useState({
+    id: 1,
     store_name: "",
     address: "",
     phone: ""
@@ -10,27 +13,34 @@ function Settings() {
     fetchProfile();
   }, []);
   const fetchProfile = async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch("/api/settings", { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    if (data) setProfile(data);
+    try {
+      const { data, error } = await supabase
+        .from('store_profile')
+        .select('*')
+        .single();
+        
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned"
+      if (data) setProfile(data);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    }
   };
   const handleSaveProfile = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
     try {
-      const res = await fetch("/api/settings", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(profile)
-      });
-      if (!res.ok) throw new Error("Failed to save");
+      const { error } = await supabase
+        .from('store_profile')
+        .upsert({
+          id: profile.id || 1,
+          store_name: profile.store_name,
+          address: profile.address,
+          phone: profile.phone
+        }, { onConflict: 'id' });
+        
+      if (error) throw error;
       alert("Store profile updated successfully");
     } catch (err) {
-      alert("Error updating profile");
+      alert("Error updating profile: " + err.message);
     }
   };
   return <div className="p-8 space-y-8 max-w-4xl">

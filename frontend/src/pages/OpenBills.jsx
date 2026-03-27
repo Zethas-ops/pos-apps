@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Search, Edit, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+
 function OpenBills() {
   const [bills, setBills] = useState([]);
   const [search, setSearch] = useState("");
@@ -9,10 +11,24 @@ function OpenBills() {
     fetchBills();
   }, []);
   const fetchBills = async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch("/api/pos/open-bills", { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    setBills(data);
+    try {
+      const { data, error } = await supabase
+        .from('open_bills')
+        .select('*, open_bill_items(*)')
+        .eq('status', 'OPEN')
+        .order('created_time', { ascending: false });
+        
+      if (error) throw error;
+      
+      const formattedData = data.map(bill => ({
+        ...bill,
+        items: bill.open_bill_items || []
+      }));
+      
+      setBills(formattedData);
+    } catch (err) {
+      console.error("Error fetching open bills:", err);
+    }
   };
   const handleEdit = (bill) => {
     navigate("/pos", { state: { bill, action: "edit" } });
