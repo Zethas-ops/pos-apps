@@ -40,16 +40,16 @@ function OpenBills() {
     (b) => b.customer_name.toLowerCase().includes(search.toLowerCase()) || b.table_no.toString().includes(search)
   );
   return <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Open Bills</h1>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
     type="text"
     placeholder="Search bills..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none w-64"
+    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
   />
         </div>
       </div>

@@ -349,11 +349,11 @@ function Dashboard() {
                 <span>Export CSV</span>
               </button>}
           </div>
-          <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-200">
+          <div className="flex flex-wrap items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-200">
             <select
     value={paymentMethod}
     onChange={(e) => setPaymentMethod(e.target.value)}
-    className="bg-transparent text-sm font-medium text-gray-700 outline-none px-2 py-1 cursor-pointer border-r border-gray-300 pr-3"
+    className="bg-transparent text-sm font-medium text-gray-700 outline-none px-2 py-1 cursor-pointer"
   >
               <option value="">All Payments</option>
               <option value="Cash">Cash</option>
@@ -361,6 +361,9 @@ function Dashboard() {
               <option value="Bank Transfer">Bank Transfer</option>
               <option value="Debit / Credit Card">Debit / Credit Card</option>
             </select>
+            
+            <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
+
             <select
     value={timeRange}
     onChange={handleTimeRangeChange}
@@ -376,29 +379,29 @@ function Dashboard() {
             </select>
             
             {timeRange === "custom" && <>
-                <span className="text-gray-300">|</span>
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold px-1">From</span>
+                <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">From</span>
                   <input
     type="date"
     value={startDate}
     onChange={(e) => setStartDate(e.target.value)}
-    className="bg-transparent text-sm outline-none px-1"
+    className="bg-transparent text-sm outline-none"
   />
                 </div>
-                <span className="text-gray-300">|</span>
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold px-1">To</span>
+                <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 font-medium">To</span>
                   <input
     type="date"
     value={endDate}
     onChange={(e) => setEndDate(e.target.value)}
-    className="bg-transparent text-sm outline-none px-1"
+    className="bg-transparent text-sm outline-none"
   />
                 </div>
                 <button
     onClick={handleApplyFilter}
-    className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors"
+    className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
   >
                   Apply
                 </button>

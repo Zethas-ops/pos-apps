@@ -88,17 +88,17 @@ function Inventory() {
     (i) => i.ingredient_name.toLowerCase().includes(search.toLowerCase())
   );
   return <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Inventory Management</h1>
-        <div className="flex space-x-4">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
     type="text"
     placeholder="Search ingredients..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none w-64"
+    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
   />
           </div>
           <button
@@ -108,7 +108,7 @@ function Inventory() {
       setFormData({ ingredient_name: "", unit: "", current_stock: "" });
       setShowModal(true);
     }}
-    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center space-x-2 transition-colors shadow-md shadow-blue-200"
+    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-md shadow-blue-200 w-full sm:w-auto whitespace-nowrap"
   >
             <Plus size={20} />
             <span>Add Item</span>

@@ -171,7 +171,7 @@ function Promo() {
     setShowModal(true);
   };
   return <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Promo & Discounts</h1>
         <button
     onClick={() => {
@@ -194,7 +194,7 @@ function Promo() {
       });
       setShowModal(true);
     }}
-    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center space-x-2 transition-colors shadow-md shadow-blue-200"
+    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-md shadow-blue-200 w-full sm:w-auto"
   >
           <Plus size={20} />
           <span>Create Promo</span>

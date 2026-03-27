@@ -126,11 +126,11 @@ function RoleManagement() {
     });
   };
   return <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Role Management</h1>
         <button
     onClick={() => openModal()}
-    className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700"
+    className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-indigo-700 w-full sm:w-auto"
   >
           <Plus className="w-5 h-5" />
           Add User
