@@ -154,7 +154,7 @@ function POS() {
       const [menuRes, profileRes, promoRes, recipesRes, ingredientsRes, addonsRes] = await Promise.all([
         supabase.from('menu').select('*'),
         supabase.from('store_profile').select('*').single(),
-        supabase.from('promos').select('*'),
+        supabase.from('promotions').select('*'),
         supabase.from('recipes').select('*'),
         supabase.from('ingredients').select('*'),
         supabase.from('menu_addons').select('*')
@@ -224,14 +224,38 @@ function POS() {
     setSelectedAddons([]);
     setShowOptions(true);
   };
+  const getCartIngredientUsage = () => {
+    const usage = {};
+    for (const item of cart) {
+      const menuItem = menu.find(m => m.menu_id === item.menu_id);
+      if (menuItem && menuItem.recipes) {
+        for (const r of menuItem.recipes) {
+          usage[r.ingredient_id] = (usage[r.ingredient_id] || 0) + (r.usage_amount * item.qty);
+        }
+      }
+      if (item.addons) {
+        for (const addon of item.addons) {
+          const addonMenu = menu.find(m => m.menu_id === addon.menu_id);
+          if (addonMenu && addonMenu.recipes) {
+            for (const r of addonMenu.recipes) {
+              usage[r.ingredient_id] = (usage[r.ingredient_id] || 0) + (r.usage_amount * item.qty);
+            }
+          }
+        }
+      }
+    }
+    return usage;
+  };
+
   const getMaxAllowedQty = () => {
     if (!selectedMenu) return 1;
-    let minQty = selectedMenu.maxQty;
+    const cartUsage = getCartIngredientUsage();
+    let minQty = Infinity;
     const ingredientUsage = {};
     if (selectedMenu.recipes) {
       for (const r of selectedMenu.recipes) {
         ingredientUsage[r.ingredient_id] = {
-          stock: r.current_stock,
+          stock: r.current_stock - (cartUsage[r.ingredient_id] || 0),
           usagePerItem: r.usage_amount
         };
       }
@@ -241,7 +265,7 @@ function POS() {
         for (const r of addon.recipes) {
           if (!ingredientUsage[r.ingredient_id]) {
             ingredientUsage[r.ingredient_id] = {
-              stock: r.current_stock,
+              stock: r.current_stock - (cartUsage[r.ingredient_id] || 0),
               usagePerItem: 0
             };
           }
@@ -256,16 +280,17 @@ function POS() {
         if (possible < minQty) minQty = possible;
       }
     }
+    if (minQty === Infinity) minQty = 999;
     return Math.max(0, minQty);
   };
   const isAddonOutOfStock = (addon) => {
     if (!selectedMenu) return true;
-    if (addon.maxQty <= 0) return true;
+    const cartUsage = getCartIngredientUsage();
     const ingredientUsage = {};
     if (selectedMenu.recipes) {
       for (const r of selectedMenu.recipes) {
         ingredientUsage[r.ingredient_id] = {
-          stock: r.current_stock,
+          stock: r.current_stock - (cartUsage[r.ingredient_id] || 0),
           usagePerItem: r.usage_amount
         };
       }
@@ -276,7 +301,7 @@ function POS() {
         for (const r of a.recipes) {
           if (!ingredientUsage[r.ingredient_id]) {
             ingredientUsage[r.ingredient_id] = {
-              stock: r.current_stock,
+              stock: r.current_stock - (cartUsage[r.ingredient_id] || 0),
               usagePerItem: 0
             };
           }
@@ -288,7 +313,7 @@ function POS() {
       for (const r of addon.recipes) {
         if (!ingredientUsage[r.ingredient_id]) {
           ingredientUsage[r.ingredient_id] = {
-            stock: r.current_stock,
+            stock: r.current_stock - (cartUsage[r.ingredient_id] || 0),
             usagePerItem: 0
           };
         }
@@ -441,8 +466,6 @@ function POS() {
 
       // 3. Update inventory stock
       for (const item of cart) {
-        if (item.is_auto_free) continue;
-        
         const menuItem = menu.find(m => m.menu_id === item.menu_id);
         if (menuItem && menuItem.recipes) {
           for (const recipe of menuItem.recipes) {
@@ -582,13 +605,18 @@ function POS() {
           </body>
         </html>
       `;
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(receiptContent);
-        printWindow.document.close();
-      } else {
-        alert("Please allow popups to print receipts.");
-      }
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      iframe.contentDocument.write(receiptContent);
+      iframe.contentDocument.close();
+      iframe.onload = function() {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+      };
       alert("Payment successful and receipt printed!");
       setCart([]);
       setTableNo("");
@@ -650,7 +678,7 @@ function POS() {
             tax: totals.tax,
             discount: totals.discount,
             total_price: totals.total,
-            created_time: new Date().toISOString()
+            created_at: new Date().toISOString()
           }])
           .select()
           .single();
@@ -686,6 +714,21 @@ function POS() {
       alert(err.message || "Failed to save open bill");
     }
   };
+  const getMenuMaxQty = (menuItem) => {
+    const cartUsage = getCartIngredientUsage();
+    let minQty = Infinity;
+    if (menuItem.recipes && menuItem.recipes.length > 0) {
+      for (const r of menuItem.recipes) {
+        const stock = r.current_stock - (cartUsage[r.ingredient_id] || 0);
+        const possible = Math.floor(stock / r.usage_amount);
+        if (possible < minQty) minQty = possible;
+      }
+    } else {
+      minQty = 999;
+    }
+    return Math.max(0, minQty);
+  };
+
   const filteredMenu = menu.filter((item) => {
     if (activeCategory !== "All" && item.category !== activeCategory) return false;
     if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -730,7 +773,8 @@ function POS() {
         <div className="flex-1 overflow-y-auto p-4">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredMenu.map((item) => {
-    const outOfStock = item.maxQty <= 0;
+    const currentMaxQty = getMenuMaxQty(item);
+    const outOfStock = currentMaxQty <= 0;
     return <div
       key={item.menu_id}
       onClick={() => !outOfStock && handleMenuClick(item)}

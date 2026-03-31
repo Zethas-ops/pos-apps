@@ -15,7 +15,7 @@ function OpenBills() {
       const { data, error } = await supabase
         .from('open_bills')
         .select('*, open_bill_items(*)')
-        .order('created_time', { ascending: false });
+        .order('created_at', { ascending: false });
         
       if (error) throw error;
       
@@ -63,7 +63,7 @@ function OpenBills() {
                   <p className="text-sm text-gray-500 font-medium">Table {bill.table_no}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-400 font-medium">{new Date(bill.created_time).toLocaleTimeString()}</p>
+                  <p className="text-xs text-gray-400 font-medium">{new Date(bill.created_at).toLocaleTimeString()}</p>
                   <p className="font-black text-blue-600">Rp {total.toLocaleString()}</p>
                 </div>
               </div>

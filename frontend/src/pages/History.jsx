@@ -23,7 +23,10 @@ function History() {
       // Map the data to match the expected format
       const formattedData = data.map(t => ({
         ...t,
-        items: t.transaction_items || []
+        items: (t.transaction_items || []).map(item => ({
+          ...item,
+          addons: typeof item.addons === 'string' ? JSON.parse(item.addons) : item.addons || []
+        }))
       }));
       
       setTransactions(formattedData);
@@ -89,13 +92,18 @@ function History() {
         </body>
       </html>
     `;
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(receiptContent);
-      printWindow.document.close();
-    } else {
-      alert("Please allow popups to print receipts.");
-    }
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.write(receiptContent);
+    iframe.contentDocument.close();
+    iframe.onload = function() {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    };
   };
   const filteredTransactions = transactions.filter((t) => {
     const matchSearch = t.customer_name.toLowerCase().includes(search.toLowerCase()) || t.transaction_id.toString().includes(search);

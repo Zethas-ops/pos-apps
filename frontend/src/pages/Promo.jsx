@@ -33,7 +33,7 @@ function Promo() {
   const fetchData = async () => {
     try {
       const [promoRes, menuRes] = await Promise.all([
-        supabase.from('promos').select('*').order('promo_id', { ascending: false }),
+        supabase.from('promotions').select('*').order('promo_id', { ascending: false }),
         supabase.from('menu').select('*')
       ]);
       
@@ -72,13 +72,13 @@ function Promo() {
 
       if (editId) {
         const { error } = await supabase
-          .from('promos')
+          .from('promotions')
           .update(payload)
           .eq('promo_id', editId);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('promos')
+          .from('promotions')
           .insert([payload]);
         if (error) throw error;
       }
@@ -112,7 +112,7 @@ function Promo() {
     if (!deleteId) return;
     try {
       const { error } = await supabase
-        .from('promos')
+        .from('promotions')
         .delete()
         .eq('promo_id', deleteId);
       if (error) throw error;
@@ -128,7 +128,7 @@ function Promo() {
       if (!promo) return;
       
       const { error } = await supabase
-        .from('promos')
+        .from('promotions')
         .update({ is_active: promo.is_active === 1 ? 0 : 1 })
         .eq('promo_id', id);
         

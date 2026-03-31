@@ -176,7 +176,7 @@ function MenuManagement() {
       name: item.name,
       category: item.category,
       price: item.price.toString(),
-      image: null,
+      image: item.image || null,
       addon_target: item.addon_target || "All",
       recipes: item.recipes || [],
       addons: item.addons?.map((a) => a.menu_id) || []
@@ -348,20 +348,52 @@ function MenuManagement() {
     onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
     className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none"
   />
+                  {formData.image && (
+                    <div className="mt-3 h-32 w-32 rounded-xl overflow-hidden border border-gray-200">
+                      <img src={typeof formData.image === 'string' ? formData.image : URL.createObjectURL(formData.image)} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
                 </div>
               </div>
 
               {(formData.category === "Add-Ons" || showNewCategoryInput && newCategory.trim() === "Add-Ons") && <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Add-on Target Category *</label>
-                  <select
-    required
-    value={formData.addon_target}
-    onChange={(e) => setFormData({ ...formData, addon_target: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
-  >
-                    <option value="All">All Categories</option>
-                    {categories.filter((c) => c !== "Add-Ons").map((cat) => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="flex items-center space-x-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-blue-50">
+                      <input
+                        type="checkbox"
+                        checked={formData.addon_target === "All" || formData.addon_target.includes("All")}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({ ...formData, addon_target: "All" });
+                          } else {
+                            setFormData({ ...formData, addon_target: "" });
+                          }
+                        }}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">All Categories</span>
+                    </label>
+                    {categories.filter((c) => c !== "Add-Ons").map((cat) => (
+                      <label key={cat} className="flex items-center space-x-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-blue-50">
+                        <input
+                          type="checkbox"
+                          checked={formData.addon_target !== "All" && formData.addon_target.split(',').includes(cat)}
+                          onChange={(e) => {
+                            let targets = formData.addon_target === "All" ? [] : formData.addon_target.split(',').filter(Boolean);
+                            if (e.target.checked) {
+                              targets.push(cat);
+                            } else {
+                              targets = targets.filter(t => t !== cat);
+                            }
+                            setFormData({ ...formData, addon_target: targets.length > 0 ? targets.join(',') : "" });
+                          }}
+                          className="rounded text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>}
 
               {
@@ -392,14 +424,19 @@ function MenuManagement() {
                             {inv.ingredient_name} ({inv.unit})
                           </option>)}
                       </select>
-                      <input
-    required
-    type="number"
-    placeholder="Amount"
-    value={recipe.usage_amount}
-    onChange={(e) => updateRecipeRow(index, "usage_amount", e.target.value)}
-    className="w-32 p-3 rounded-xl border border-gray-300 outline-none"
-  />
+                      <div className="relative w-32">
+                        <input
+                          required
+                          type="number"
+                          placeholder="Amount"
+                          value={recipe.usage_amount}
+                          onChange={(e) => updateRecipeRow(index, "usage_amount", e.target.value)}
+                          className="w-full p-3 pr-12 rounded-xl border border-gray-300 outline-none"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+                          {ingredients.find(i => i.ingredient_id.toString() === recipe.ingredient_id.toString())?.unit || ''}
+                        </span>
+                      </div>
                       <button
     type="button"
     onClick={() => removeRecipeRow(index)}
@@ -417,7 +454,7 @@ function MenuManagement() {
               {formData.category !== "Add-Ons" && <div className="border-t border-gray-200 pt-6">
                   <label className="block text-sm font-bold text-gray-700 mb-4">Allowed Add-ons</label>
                   <div className="grid grid-cols-2 gap-3">
-                    {menu.filter((m) => m.category === "Add-Ons" && (m.addon_target === "All" || m.addon_target === formData.category)).map((addon) => <label key={addon.menu_id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+                    {menu.filter((m) => m.category === "Add-Ons" && (m.addon_target === "All" || (m.addon_target && m.addon_target.split(',').includes(formData.category)))).map((addon) => <label key={addon.menu_id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
                         <input
     type="checkbox"
     checked={formData.addons.includes(addon.menu_id)}
