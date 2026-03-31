@@ -23,10 +23,22 @@ function History() {
       // Map the data to match the expected format
       const formattedData = data.map(t => ({
         ...t,
-        items: (t.transaction_items || []).map(item => ({
-          ...item,
-          addons: typeof item.addons === 'string' ? JSON.parse(item.addons) : item.addons || []
-        }))
+        items: (t.transaction_items || []).map(item => {
+          let parsedAddons = [];
+          if (typeof item.addons === 'string') {
+            try {
+              parsedAddons = JSON.parse(item.addons);
+            } catch (e) {
+              console.error("Error parsing addons:", e);
+            }
+          } else {
+            parsedAddons = item.addons || [];
+          }
+          return {
+            ...item,
+            addons: parsedAddons
+          };
+        })
       }));
       
       setTransactions(formattedData);
@@ -86,24 +98,22 @@ function History() {
           <div class="footer">
             <p>Thank you for your visit!</p>
           </div>
-          <script>
-            window.onload = function() { window.print(); window.close(); }
-          <\/script>
         </body>
       </html>
     `;
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     document.body.appendChild(iframe);
-    iframe.contentDocument.write(receiptContent);
-    iframe.contentDocument.close();
-    iframe.onload = function() {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
-    };
+    iframe.contentWindow.document.open();
+    iframe.contentWindow.document.write(receiptContent);
+    iframe.contentWindow.document.close();
+    
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
   };
   const filteredTransactions = transactions.filter((t) => {
     const matchSearch = t.customer_name.toLowerCase().includes(search.toLowerCase()) || t.transaction_id.toString().includes(search);
@@ -196,29 +206,29 @@ function History() {
                                     {item.drink_type && item.sugar_level && <span> • </span>}
                                     {item.sugar_level && <span>{item.sugar_level} Sugar</span>}
                                   </p>}
-                                {item.addons && item.addons.length > 0 && <p className="text-sm text-gray-500">
+                                {Array.isArray(item.addons) && item.addons.length > 0 && <p className="text-sm text-gray-500">
                                     + {item.addons.map((a) => a.name).join(", ")}
                                   </p>}
                               </div>
-                              <p className="font-medium text-gray-800">Rp {item.subtotal.toLocaleString()}</p>
+                              <p className="font-medium text-gray-800">Rp {Number(item.subtotal || 0).toLocaleString()}</p>
                             </div>)}
                         </div>
                         <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end space-x-8 text-sm">
                           <div className="text-right">
                             <p className="text-gray-500 mb-1">Subtotal</p>
-                            <p className="font-medium text-gray-800">Rp {t.subtotal?.toLocaleString() || 0}</p>
+                            <p className="font-medium text-gray-800">Rp {Number(t.subtotal || 0).toLocaleString()}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-gray-500 mb-1">Tax</p>
-                            <p className="font-medium text-gray-800">Rp {t.tax?.toLocaleString() || 0}</p>
+                            <p className="font-medium text-gray-800">Rp {Number(t.tax || 0).toLocaleString()}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-gray-500 mb-1">Discount</p>
-                            <p className="font-medium text-red-600">-Rp {t.discount?.toLocaleString() || 0}</p>
+                            <p className="font-medium text-red-600">-Rp {Number(t.discount || 0).toLocaleString()}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-gray-500 mb-1">Total</p>
-                            <p className="font-bold text-blue-600 text-lg">Rp {t.total_price.toLocaleString()}</p>
+                            <p className="font-bold text-blue-600 text-lg">Rp {Number(t.total_price || 0).toLocaleString()}</p>
                           </div>
                         </div>
                       </div>

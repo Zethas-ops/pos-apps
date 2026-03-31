@@ -38,11 +38,29 @@ function MenuManagement() {
       if (recipesRes.error) console.error("Recipes fetch error:", recipesRes.error);
       if (addonsRes.error) console.error("Addons fetch error:", addonsRes.error);
 
-      const menuData = (menuRes.data || []).map(item => ({
+      const menuData = (menuRes.data || []).map(item => {
+        let image = item.image;
+        let addon_target = item.addon_target;
+        if (addon_target && addon_target.includes('|||')) {
+          const parts = addon_target.split('|||');
+          addon_target = parts[0] || null;
+          image = parts[1];
+        }
+        return {
         ...item,
-        recipes: recipesRes.data?.filter(r => r.menu_id === item.menu_id) || [],
+        image,
+        addon_target,
+        recipes: recipesRes.data?.filter(r => r.menu_id === item.menu_id).map(r => {
+          const ing = invRes.data?.find(i => i.ingredient_id === r.ingredient_id);
+          return {
+            ...r,
+            ingredient_name: ing ? ing.ingredient_name : 'Unknown',
+            unit: ing ? ing.unit : ''
+          };
+        }) || [],
         addons: addonsRes.data?.filter(a => a.menu_id === item.menu_id).map(a => ({ menu_id: a.addon_menu_id })) || []
-      }));
+        };
+      });
 
       setMenu(menuData);
       setIngredients(invRes.data || []);
@@ -64,43 +82,60 @@ function MenuManagement() {
     const finalCategory = showNewCategoryInput && newCategory.trim() !== "" ? newCategory.trim() : formData.category;
     
     try {
-      let imageUrl = null;
+      let imageUrl = formData.image;
+      let addonTarget = finalCategory === "Add-Ons" ? formData.addon_target : null;
       
-      // Handle image upload to Supabase Storage if an image was selected
-      if (formData.image) {
-        const fileExt = formData.image.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-        
-        // Note: This requires a 'menu-images' bucket to be created in Supabase
-        // If it fails, we'll just continue without the image
-        try {
-          const { error: uploadError, data } = await supabase.storage
-            .from('menu-images')
-            .upload(filePath, formData.image);
-            
-          if (!uploadError && data) {
-            const { data: publicUrlData } = supabase.storage
-              .from('menu-images')
-              .getPublicUrl(filePath);
-            imageUrl = publicUrlData.publicUrl;
-          }
-        } catch (uploadErr) {
-          console.warn("Image upload failed, continuing without image", uploadErr);
-        }
+      // If image is a File object, convert to base64 and resize
+      if (formData.image instanceof File) {
+        imageUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              const MAX_WIDTH = 400;
+              const MAX_HEIGHT = 400;
+              let width = img.width;
+              let height = img.height;
+
+              if (width > height) {
+                if (width > MAX_WIDTH) {
+                  height *= MAX_WIDTH / width;
+                  width = MAX_WIDTH;
+                }
+              } else {
+                if (height > MAX_HEIGHT) {
+                  width *= MAX_HEIGHT / height;
+                  height = MAX_HEIGHT;
+                }
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', 0.8));
+            };
+            img.onerror = reject;
+            img.src = reader.result;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(formData.image);
+        });
+      }
+
+      // If image is too long for VARCHAR(255), store it in addon_target (TEXT)
+      if (typeof imageUrl === 'string' && imageUrl.length > 255) {
+        addonTarget = `${addonTarget || ''}|||${imageUrl}`;
+        imageUrl = null;
       }
 
       const menuPayload = {
         name: formData.name,
         category: finalCategory,
         price: parseFloat(formData.price),
-        addon_target: finalCategory === "Add-Ons" ? formData.addon_target : null
+        addon_target: addonTarget,
+        image: imageUrl
       };
-      
-      // Only update image if a new one was uploaded
-      if (imageUrl) {
-        menuPayload.image = imageUrl;
-      }
 
       let currentMenuId = editId;
 

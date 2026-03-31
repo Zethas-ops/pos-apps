@@ -35,10 +35,22 @@ function POS() {
       setTableNo(bill.table_no);
       setCustomerName(bill.customer_name);
       setOpenBillId(bill.bill_id);
-      const parsedItems = bill.items.map((item) => ({
-        ...item,
-        addons: typeof item.addons === "string" ? JSON.parse(item.addons) : item.addons || []
-      }));
+      const parsedItems = bill.items.map((item) => {
+        let parsedAddons = [];
+        if (typeof item.addons === "string") {
+          try {
+            parsedAddons = JSON.parse(item.addons);
+          } catch (e) {
+            console.error("Error parsing addons:", e);
+          }
+        } else {
+          parsedAddons = item.addons || [];
+        }
+        return {
+          ...item,
+          addons: parsedAddons
+        };
+      });
       setCart(parsedItems);
       if (location.state.action === "close") {
         setShowPayment(true);
@@ -47,12 +59,14 @@ function POS() {
     }
   }, [location.state]);
   const isPromoValid = (promo) => {
-    if (promo.is_active !== 1) return false;
+    if (!promo.is_active) return false;
     const now = /* @__PURE__ */ new Date();
     if (promo.start_date && promo.end_date) {
-      const start = new Date(promo.start_date);
+      const [startYear, startMonth, startDay] = promo.start_date.split('T')[0].split('-');
+      const start = new Date(startYear, startMonth - 1, startDay);
       start.setHours(0, 0, 0, 0);
-      const end = new Date(promo.end_date);
+      const [endYear, endMonth, endDay] = promo.end_date.split('T')[0].split('-');
+      const end = new Date(endYear, endMonth - 1, endDay);
       end.setHours(23, 59, 59, 999);
       if (now < start || now > end) return false;
     }
@@ -95,17 +109,18 @@ function POS() {
     const subtotal = nonFreeCart.reduce((sum, item) => sum + item.subtotal, 0);
     activePromos.forEach((promo) => {
       if (promo.type === "MIN_BUY_FREE") {
-        const buyItems = nonFreeCart.filter((item) => item.menu_id === promo.min_buy_menu_id);
+        const buyItems = nonFreeCart.filter((item) => item.menu_id === Number(promo.min_buy_menu_id));
         const totalBuyQty = buyItems.reduce((sum, item) => sum + item.qty, 0);
-        if (totalBuyQty >= promo.min_buy_qty) {
-          const timesApplied = Math.floor(totalBuyQty / promo.min_buy_qty);
-          const freeQty = timesApplied * promo.free_qty;
+        const minBuyQty = Number(promo.min_buy_qty);
+        if (minBuyQty > 0 && totalBuyQty >= minBuyQty) {
+          const timesApplied = Math.floor(totalBuyQty / minBuyQty);
+          const freeQty = timesApplied * Number(promo.free_qty);
           if (freeQty > 0) {
             requiredFreeItems[promo.free_menu_id] = (requiredFreeItems[promo.free_menu_id] || 0) + freeQty;
           }
         }
       } else if (promo.type === "MIN_NOMINAL_FREE" && promo.free_menu_id) {
-        if (subtotal >= promo.min_nominal) {
+        if (subtotal >= Number(promo.min_nominal)) {
           requiredFreeItems[promo.free_menu_id] = (requiredFreeItems[promo.free_menu_id] || 0) + 1;
         }
       }
@@ -170,6 +185,14 @@ function POS() {
       }
 
       const menuData = menuRes.data.map(item => {
+        let image = item.image;
+        let addon_target = item.addon_target;
+        if (addon_target && addon_target.includes('|||')) {
+          const parts = addon_target.split('|||');
+          addon_target = parts[0] || null;
+          image = parts[1];
+        }
+
         const itemRecipes = recipesRes.data?.filter(r => r.menu_id === item.menu_id) || [];
         const recipesWithStock = itemRecipes.map(r => ({
           ...r,
@@ -188,6 +211,8 @@ function POS() {
 
         return {
           ...item,
+          image,
+          addon_target,
           recipes: recipesWithStock,
           maxQty: maxQty
         };
@@ -379,25 +404,25 @@ function POS() {
     setCart(newCart);
   };
   const calculateTotals = () => {
-    let subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+    let subtotal = cart.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
     let discount = 0;
     const activePromos = promos.filter(isPromoValid);
     let maxDiscount = 0;
     activePromos.forEach((promo) => {
       let currentDiscount = 0;
       if (promo.type === "DISCOUNT") {
-        currentDiscount = subtotal * (promo.discount_percent / 100);
+        currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
       } else if (promo.type === "MIN_BUY_DISCOUNT") {
         const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-        if (totalQty >= promo.min_buy_qty) {
-          currentDiscount = promo.discount_amount;
+        if (totalQty >= Number(promo.min_buy_qty)) {
+          currentDiscount = Number(promo.discount_amount);
         }
       } else if (promo.type === "MIN_NOMINAL_FREE") {
-        if (subtotal >= promo.min_nominal) {
+        if (subtotal >= Number(promo.min_nominal)) {
           if (promo.discount_amount) {
-            currentDiscount = promo.discount_amount;
+            currentDiscount = Number(promo.discount_amount);
           } else if (promo.discount_percent) {
-            currentDiscount = subtotal * (promo.discount_percent / 100);
+            currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
           }
         }
       } else if (promo.type === "MIN_BUY_FREE") {
@@ -599,24 +624,22 @@ function POS() {
             <div class="footer">
               <p>*** THANK YOU ***</p>
             </div>
-            <script>
-              window.onload = function() { window.print(); window.close(); }
-            </script>
           </body>
         </html>
       `;
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       document.body.appendChild(iframe);
-      iframe.contentDocument.write(receiptContent);
-      iframe.contentDocument.close();
-      iframe.onload = function() {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 1000);
-      };
+      iframe.contentWindow.document.open();
+      iframe.contentWindow.document.write(receiptContent);
+      iframe.contentWindow.document.close();
+      
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
       alert("Payment successful and receipt printed!");
       setCart([]);
       setTableNo("");

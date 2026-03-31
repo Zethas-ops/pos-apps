@@ -129,7 +129,7 @@ function Promo() {
       
       const { error } = await supabase
         .from('promotions')
-        .update({ is_active: promo.is_active === 1 ? 0 : 1 })
+        .update({ is_active: !promo.is_active })
         .eq('promo_id', id);
         
       if (error) throw error;

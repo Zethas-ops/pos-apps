@@ -55,7 +55,7 @@ function OpenBills() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredBills.map((bill) => {
-    const total = bill.items.reduce((sum, i) => sum + i.subtotal, 0);
+    const total = bill.items.reduce((sum, i) => sum + Number(i.subtotal || 0), 0);
     return <div key={bill.bill_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
               <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
                 <div>
@@ -71,7 +71,7 @@ function OpenBills() {
               <div className="p-4 flex-1 overflow-y-auto max-h-48 space-y-2">
                 {bill.items.map((item, idx) => <div key={idx} className="flex justify-between text-sm">
                     <span className="text-gray-700 font-medium">{item.qty}x {item.menu_name}</span>
-                    <span className="text-gray-500">Rp {item.subtotal.toLocaleString()}</span>
+                    <span className="text-gray-500">Rp {Number(item.subtotal || 0).toLocaleString()}</span>
                   </div>)}
               </div>
 
