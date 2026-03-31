@@ -413,7 +413,8 @@ function POS() {
           discount: totals.discount,
           cash_amount: paymentMethod === "Cash" ? Number(cashAmount) : totals.total,
           change_amount: paymentMethod === "Cash" ? Number(cashAmount) - totals.total : 0,
-          total_price: totals.total
+          total_price: totals.total,
+          date: new Date().toISOString()
         }])
         .select()
         .single();
@@ -648,7 +649,8 @@ function POS() {
             subtotal: totals.subtotal,
             tax: totals.tax,
             discount: totals.discount,
-            total_price: totals.total
+            total_price: totals.total,
+            created_time: new Date().toISOString()
           }])
           .select()
           .single();
