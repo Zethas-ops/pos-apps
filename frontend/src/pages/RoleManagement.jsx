@@ -125,37 +125,37 @@ function RoleManagement() {
       permissions: []
     });
   };
-  return <div className="space-y-6">
+  return <div className="p-8 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Role Management</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Role Management</h1>
         <button
     onClick={() => openModal()}
-    className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-indigo-700 w-full sm:w-auto"
+    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-md shadow-blue-200 w-full sm:w-auto whitespace-nowrap"
   >
           <Plus className="w-5 h-5" />
           Add User
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="p-4 font-bold text-gray-600">Name</th>
+              <th className="p-4 font-bold text-gray-600">Username</th>
+              <th className="p-4 font-bold text-gray-600">Role</th>
+              <th className="p-4 font-bold text-gray-600 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user) => <tr key={user.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{user.name || "-"}</div>
+                <td className="p-2 font-medium text-gray-800 whitespace-nowrap">
+                  <div className="p-4 font-medium text-gray-800">{user.name || "-"}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500">{user.username}</div>
+                <td className="p-2 font-medium text-gray-800 whitespace-nowrap">
+                  <div className="p-4 font-medium text-gray-800">{user.username}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="p-2 font-medium text-gray-800 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === "ADMIN" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800"}`}>
                     {user.role === "ADMIN" && <Shield className="w-3 h-3 mr-1" />}
                     {user.role}
