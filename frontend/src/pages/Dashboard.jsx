@@ -11,6 +11,15 @@ function Dashboard() {
   const [charts, setCharts] = useState({ salesChart: [], hourlyTraffic: [], paymentMethods: [], topSelling: [] });
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("last7days");
+  const timeRangeLabel = {
+  today: "Today",
+  yesterday: "Yesterday",
+  last7days: "Last 7 Days",
+  last30days: "Last 30 Days",
+  thisMonth: "This Month",
+  lastMonth: "Last Month",
+  custom: "Custom Range",
+};
   
   // Initialize with UTC+7 dates
   const initZonedNow = moment().tz(TIMEZONE);
@@ -337,7 +346,9 @@ function Dashboard() {
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-bold text-gray-800">Sales Last</h2>
+            <h2 className="text-lg font-bold text-gray-800">
+              Sales {timeRangeLabel[timeRange]}
+            </h2>
             {isAdmin && <button
     onClick={handleExportCSV}
     className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
