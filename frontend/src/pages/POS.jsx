@@ -1119,7 +1119,7 @@ function POS() {
     /* Payment Modal */
   }
       {showPayment && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto flex flex-col">
             <div className="p-4 border-b flex justify-between items-center bg-gray-50">
               <h3 className="text-xl font-bold text-gray-800">Payment</h3>
               <button onClick={() => setShowPayment(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
