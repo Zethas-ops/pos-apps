@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Edit, Power } from "lucide-react";
-import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import moment from "moment-timezone";
 import { supabase } from "../lib/supabase";
 
 const TIMEZONE = 'Asia/Jakarta';
@@ -230,6 +229,7 @@ function Promo() {
                     <span className="font-bold text-gray-800">
                       Buy {promo.min_buy_qty} {menu.find((m) => m.menu_id === promo.min_buy_menu_id)?.name || "Item"}, 
                       Get {promo.discount_percent ? `${promo.discount_percent}% OFF` : `Rp ${promo.discount_amount?.toLocaleString()} OFF`}
+                      {promo.free_menu_id ? ` on ${promo.free_qty || 'Any'} ${menu.find((m) => m.menu_id === promo.free_menu_id)?.name || "Item"}` : ""}
                     </span>
                   </div> : promo.type === "MIN_NOMINAL_FREE" ? <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <span className="text-sm text-gray-500 font-medium block mb-1">Min. Nominal Get Free/Discount</span>
@@ -240,7 +240,7 @@ function Promo() {
                   </div> : null}
 
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p><span className="font-medium">Valid:</span> {format(toZonedTime(new Date(promo.start_date), TIMEZONE), "dd MMM yyyy")} - {format(toZonedTime(new Date(promo.end_date), TIMEZONE), "dd MMM yyyy")}</p>
+                  <p><span className="font-medium">Valid:</span> {moment.utc(promo.start_date).tz(TIMEZONE).format("DD MMM YYYY")} - {moment.utc(promo.end_date).tz(TIMEZONE).format("DD MMM YYYY")}</p>
                   {promo.day_filter && <p><span className="font-medium">Days:</span> {promo.day_filter}</p>}
                   {promo.time_filter && <p><span className="font-medium">Time:</span> {promo.time_filter}</p>}
                 </div>
@@ -373,14 +373,13 @@ function Promo() {
                   </div>
                 </div> : formData.type === "MIN_BUY_DISCOUNT" ? <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Buy Menu *</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Buy Menu (Optional)</label>
                     <select
-    required
     value={formData.min_buy_menu_id}
     onChange={(e) => setFormData({ ...formData, min_buy_menu_id: e.target.value })}
     className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
-                      <option value="">Select Menu</option>
+                      <option value="">Any Menu</option>
                       {menu.map((m) => <option key={m.menu_id} value={m.menu_id}>{m.name}</option>)}
                     </select>
                   </div>
@@ -394,6 +393,28 @@ function Promo() {
     onChange={(e) => setFormData({ ...formData, min_buy_qty: e.target.value })}
     className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 2"
+  />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Discount Menu (Optional)</label>
+                    <select
+    value={formData.free_menu_id}
+    onChange={(e) => setFormData({ ...formData, free_menu_id: e.target.value })}
+    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+  >
+                      <option value="">Any Menu</option>
+                      {menu.map((m) => <option key={m.menu_id} value={m.menu_id}>{m.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Discount Qty (Optional)</label>
+                    <input
+    type="number"
+    min="1"
+    value={formData.free_qty}
+    onChange={(e) => setFormData({ ...formData, free_qty: e.target.value })}
+    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    placeholder="e.g., 1"
   />
                   </div>
                   <div>

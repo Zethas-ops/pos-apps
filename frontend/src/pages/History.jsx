@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Search, Printer, Calendar, ChevronDown, ChevronUp } from "lucide-react";
-import { supabase } from "../lib/supabase";
 import moment from "moment-timezone";
+import { supabase } from "../lib/supabase";
 
 const TIMEZONE = 'Asia/Jakarta';
 
@@ -40,7 +40,6 @@ function History() {
       // Map the data to match the expected format
       const formattedData = data.map(t => ({
         ...t,
-        date: moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss"),
         items: (t.transaction_items || []).map(item => {
           let parsedAddons = [];
           if (typeof item.addons === 'string') {
@@ -60,7 +59,6 @@ function History() {
       }));
       
       setTransactions(formattedData);
-      console.log("Fetched transactions:", formattedData);
     } catch (err) {
       console.error("Error fetching history:", err);
     }
@@ -94,7 +92,7 @@ function History() {
             <p>${storeProfile?.phone || "Phone"}</p>
             <div class="divider"></div>
             <p>Receipt #${transaction.transaction_id}</p>
-            <p>${transaction.date}</p>
+            <p>${moment.utc(transaction.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</p>
             <p>Customer: ${transaction.customer_name} | Table: ${transaction.table_no}</p>
           </div>
           <div class="divider"></div>
@@ -164,7 +162,8 @@ function History() {
   };
   const filteredTransactions = transactions.filter((t) => {
     const matchSearch = t.customer_name.toLowerCase().includes(search.toLowerCase()) || t.transaction_id.toString().includes(search);
-    const matchDate = dateFilter ? t.date.startsWith(dateFilter) : true;
+    const localDate = moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD");
+    const matchDate = dateFilter ? localDate === dateFilter : true;
     return matchSearch && matchDate;
   });
   return <div className="p-8 space-y-8">
@@ -215,7 +214,7 @@ function History() {
                       <span>#{t.transaction_id}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-gray-600">{t.date}</td>
+                  <td className="p-4 text-gray-600">{moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</td>
                   <td className="p-4 font-medium text-gray-800">{t.customer_name}</td>
                   <td className="p-4 text-gray-600">{t.table_no}</td>
                   <td className="p-4 font-bold text-blue-600">Rp {Number(t.total_price || 0).toLocaleString()}</td>

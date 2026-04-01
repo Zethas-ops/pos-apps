@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Minus, Trash2, Search, X, Check, ShoppingBag } from "lucide-react";
 import { clsx } from "clsx";
 import { useLocation } from "react-router-dom";
-import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import moment from "moment-timezone";
 import { supabase } from "../lib/supabase";
 
 const TIMEZONE = 'Asia/Jakarta';
@@ -31,6 +30,7 @@ function POS() {
   const [cashAmount, setCashAmount] = useState("");
   const [qrisData, setQrisData] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const isProcessingRef = useRef(false);
   useEffect(() => {
     fetchData();
   }, []);
@@ -65,18 +65,14 @@ function POS() {
   }, [location.state]);
   const isPromoValid = (promo) => {
     if (!promo.is_active) return false;
-    const now = /* @__PURE__ */ new Date();
+    const now = moment().tz(TIMEZONE);
     if (promo.start_date && promo.end_date) {
-      const [startYear, startMonth, startDay] = promo.start_date.split('T')[0].split('-');
-      const start = new Date(startYear, startMonth - 1, startDay);
-      start.setHours(0, 0, 0, 0);
-      const [endYear, endMonth, endDay] = promo.end_date.split('T')[0].split('-');
-      const end = new Date(endYear, endMonth - 1, endDay);
-      end.setHours(23, 59, 59, 999);
-      if (now < start || now > end) return false;
+      const start = moment.utc(promo.start_date).tz(TIMEZONE).startOf('day');
+      const end = moment.utc(promo.end_date).tz(TIMEZONE).endOf('day');
+      if (now.isBefore(start) || now.isAfter(end)) return false;
     }
     if (promo.day_filter && promo.day_filter !== "All Days") {
-      const day = now.getDay();
+      const day = now.day();
       const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
       const currentDayName = dayNames[day];
       if (promo.day_filter === "Weekdays" && (day === 0 || day === 6)) return false;
@@ -86,8 +82,8 @@ function POS() {
       }
     }
     if (promo.time_filter && promo.time_filter !== "All Day") {
-      const hour = now.getHours();
-      const minute = now.getMinutes();
+      const hour = now.hours();
+      const minute = now.minutes();
       const currentMinutes = hour * 60 + minute;
       if (promo.time_filter === "Morning (06:00 - 12:00)") {
         if (currentMinutes < 6 * 60 || currentMinutes > 12 * 60) return false;
@@ -234,7 +230,7 @@ function POS() {
 
       menuDataWithAddons.sort((a, b) => a.name.localeCompare(b.name));
       setMenu(menuDataWithAddons);
-      const cats = Array.from(new Set(menuDataWithAddons.map((item) => item.category))).filter(c => c !== "Add-Ons");
+      const cats = Array.from(new Set(menuDataWithAddons.map((item) => item.category))).filter(c => c && c.toLowerCase() !== "add-ons" && c.toLowerCase() !== "addons");
       const categoryOrder = ["Coffee", "Non-Coffee", "Food", "Beverage"];
       cats.sort((a, b) => {
         const indexA = categoryOrder.indexOf(a);
@@ -438,10 +434,30 @@ function POS() {
         
         if (eligibleQty >= Number(promo.min_buy_qty)) {
           const timesApplied = Math.floor(eligibleQty / Number(promo.min_buy_qty));
-          if (promo.discount_amount) {
-            currentDiscount = Number(promo.discount_amount) * timesApplied;
-          } else if (promo.discount_percent) {
-            currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
+          
+          if (promo.free_menu_id) {
+            const discountItems = cart.filter(i => i.menu_id === Number(promo.free_menu_id));
+            const availableQty = discountItems.reduce((sum, item) => sum + item.qty, 0);
+            
+            if (availableQty > 0) {
+              const maxDiscountQty = promo.free_qty ? Number(promo.free_qty) * timesApplied : availableQty;
+              const actualDiscountQty = Math.min(availableQty, maxDiscountQty);
+              
+              const discountItemsSubtotal = discountItems.reduce((sum, item) => sum + item.subtotal, 0);
+              const discountableSubtotal = (discountItemsSubtotal / availableQty) * actualDiscountQty;
+              
+              if (promo.discount_amount) {
+                currentDiscount = Number(promo.discount_amount) * (promo.free_qty ? actualDiscountQty : timesApplied);
+              } else if (promo.discount_percent) {
+                currentDiscount = discountableSubtotal * (Number(promo.discount_percent) / 100);
+              }
+            }
+          } else {
+            if (promo.discount_amount) {
+              currentDiscount = Number(promo.discount_amount) * timesApplied;
+            } else if (promo.discount_percent) {
+              currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
+            }
           }
         }
       } else if (promo.type === "MIN_NOMINAL_FREE") {
@@ -477,7 +493,8 @@ function POS() {
     setShowPayment(true);
   };
   const processPayment = async () => {
-    if (isProcessing) return;
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true;
     setIsProcessing(true);
     try {
       // 1. Create transaction record
@@ -493,7 +510,7 @@ function POS() {
           cash_amount: paymentMethod === "Cash" ? Number(cashAmount) : totals.total,
           change_amount: paymentMethod === "Cash" ? Number(cashAmount) - totals.total : 0,
           total_price: totals.total,
-          date: new Date().toISOString()
+          date: moment().tz(TIMEZONE).toISOString()
         }])
         .select()
         .single();
@@ -602,7 +619,7 @@ function POS() {
               <p>${storeProfile?.phone || "Phone"}</p>
               <div class="divider"></div>
               <p>Receipt #${transaction.transaction_id}</p>
-              <p>${format(toZonedTime(new Date(), TIMEZONE), "dd MMM yyyy, HH:mm")}</p>
+              <p>${moment().tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</p>
               <p>Customer: ${customerName} | Table: ${tableNo}</p>
             </div>
             <div class="divider"></div>
@@ -681,6 +698,7 @@ function POS() {
       alert(err.message || "Checkout failed");
     } finally {
       setIsProcessing(false);
+      isProcessingRef.current = false;
     }
   };
   const generateQris = async () => {
@@ -699,6 +717,10 @@ function POS() {
       alert("Cart is empty");
       return;
     }
+    
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true;
+    setIsProcessing(true);
     
     try {
       let billId = openBillId;
@@ -732,7 +754,7 @@ function POS() {
             tax: totals.tax,
             discount: totals.discount,
             total_price: totals.total,
-            created_at: new Date().toISOString()
+            created_at: moment().tz(TIMEZONE).toISOString()
           }])
           .select()
           .single();
@@ -766,6 +788,9 @@ function POS() {
       setOpenBillId(null);
     } catch (err) {
       alert(err.message || "Failed to save open bill");
+    } finally {
+      setIsProcessing(false);
+      isProcessingRef.current = false;
     }
   };
   const getMenuMaxQty = (menuItem) => {
@@ -784,7 +809,7 @@ function POS() {
   };
 
   const filteredMenu = menu.filter((item) => {
-    if (item.category === "Add-Ons") return false;
+    if (item.category && (item.category.toLowerCase() === "add-ons" || item.category.toLowerCase() === "addons")) return false;
     if (activeCategory !== "All" && item.category !== activeCategory) return false;
     if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
