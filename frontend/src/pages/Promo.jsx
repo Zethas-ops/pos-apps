@@ -227,7 +227,10 @@ function Promo() {
                     </span>
                   </div> : promo.type === "MIN_BUY_DISCOUNT" ? <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <span className="text-sm text-gray-500 font-medium block mb-1">Buy X Get Discount</span>
-                    <span className="font-bold text-gray-800">Buy {promo.min_buy_qty}, Get Rp {promo.discount_amount?.toLocaleString()} OFF</span>
+                    <span className="font-bold text-gray-800">
+                      Buy {promo.min_buy_qty} {menu.find((m) => m.menu_id === promo.min_buy_menu_id)?.name || "Item"}, 
+                      Get {promo.discount_percent ? `${promo.discount_percent}% OFF` : `Rp ${promo.discount_amount?.toLocaleString()} OFF`}
+                    </span>
                   </div> : promo.type === "MIN_NOMINAL_FREE" ? <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <span className="text-sm text-gray-500 font-medium block mb-1">Min. Nominal Get Free/Discount</span>
                     <span className="font-bold text-gray-800">
@@ -370,7 +373,19 @@ function Promo() {
                   </div>
                 </div> : formData.type === "MIN_BUY_DISCOUNT" ? <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Minimum Buy Qty *</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Buy Menu *</label>
+                    <select
+    required
+    value={formData.min_buy_menu_id}
+    onChange={(e) => setFormData({ ...formData, min_buy_menu_id: e.target.value })}
+    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+  >
+                      <option value="">Select Menu</option>
+                      {menu.map((m) => <option key={m.menu_id} value={m.menu_id}>{m.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Buy Qty *</label>
                     <input
     required
     type="number"
@@ -382,15 +397,26 @@ function Promo() {
   />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Discount Amount (Rp) *</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Discount Amount (Rp)</label>
                     <input
-    required
     type="number"
     min="1"
     value={formData.discount_amount}
-    onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value })}
+    onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value, discount_percent: "" })}
     className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 10000"
+  />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">OR Discount Percentage (%)</label>
+                    <input
+    type="number"
+    min="1"
+    max="100"
+    value={formData.discount_percent}
+    onChange={(e) => setFormData({ ...formData, discount_percent: e.target.value, discount_amount: "" })}
+    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    placeholder="e.g., 15"
   />
                   </div>
                 </div> : formData.type === "MIN_NOMINAL_FREE" ? <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

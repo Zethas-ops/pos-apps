@@ -62,11 +62,12 @@ function MenuManagement() {
         };
       });
 
+      menuData.sort((a, b) => a.name.localeCompare(b.name));
       setMenu(menuData);
       setIngredients(invRes.data || []);
       
       const uniqueCategories = Array.from(new Set(menuData.map((item) => item.category)));
-      const mergedCategories = Array.from(new Set(["Coffee", "Non Coffee", "Food", "Add-Ons", ...uniqueCategories]));
+      const mergedCategories = Array.from(new Set(["Coffee", "Non-Coffee", "Food", "Beverage", "Add-Ons", ...uniqueCategories]));
       setCategories(mergedCategories);
     } catch (err) {
       console.error("Error fetching data:", err);

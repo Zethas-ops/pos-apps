@@ -30,6 +30,7 @@ function POS() {
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [cashAmount, setCashAmount] = useState("");
   const [qrisData, setQrisData] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   useEffect(() => {
     fetchData();
   }, []);
@@ -231,8 +232,18 @@ function POS() {
         };
       });
 
+      menuDataWithAddons.sort((a, b) => a.name.localeCompare(b.name));
       setMenu(menuDataWithAddons);
-      const cats = Array.from(new Set(menuDataWithAddons.map((item) => item.category)));
+      const cats = Array.from(new Set(menuDataWithAddons.map((item) => item.category))).filter(c => c !== "Add-Ons");
+      const categoryOrder = ["Coffee", "Non-Coffee", "Food", "Beverage"];
+      cats.sort((a, b) => {
+        const indexA = categoryOrder.indexOf(a);
+        const indexB = categoryOrder.indexOf(b);
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.localeCompare(b);
+      });
       setCategories(["All", ...cats]);
       
       if (!profileRes.error && profileRes.data) {
@@ -417,9 +428,21 @@ function POS() {
       if (promo.type === "DISCOUNT") {
         currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
       } else if (promo.type === "MIN_BUY_DISCOUNT") {
-        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-        if (totalQty >= Number(promo.min_buy_qty)) {
-          currentDiscount = Number(promo.discount_amount);
+        let eligibleQty = 0;
+        if (promo.min_buy_menu_id) {
+          const buyItems = cart.filter(i => i.menu_id === Number(promo.min_buy_menu_id));
+          eligibleQty = buyItems.reduce((sum, item) => sum + item.qty, 0);
+        } else {
+          eligibleQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        }
+        
+        if (eligibleQty >= Number(promo.min_buy_qty)) {
+          const timesApplied = Math.floor(eligibleQty / Number(promo.min_buy_qty));
+          if (promo.discount_amount) {
+            currentDiscount = Number(promo.discount_amount) * timesApplied;
+          } else if (promo.discount_percent) {
+            currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
+          }
         }
       } else if (promo.type === "MIN_NOMINAL_FREE") {
         if (subtotal >= Number(promo.min_nominal)) {
@@ -454,6 +477,8 @@ function POS() {
     setShowPayment(true);
   };
   const processPayment = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     try {
       // 1. Create transaction record
       const { data: transaction, error: txError } = await supabase
@@ -654,6 +679,8 @@ function POS() {
       fetchData(); // Refresh stock
     } catch (err) {
       alert(err.message || "Checkout failed");
+    } finally {
+      setIsProcessing(false);
     }
   };
   const generateQris = async () => {
@@ -757,6 +784,7 @@ function POS() {
   };
 
   const filteredMenu = menu.filter((item) => {
+    if (item.category === "Add-Ons") return false;
     if (activeCategory !== "All" && item.category !== activeCategory) return false;
     if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
@@ -1141,10 +1169,10 @@ function POS() {
             <div className="p-4 border-t bg-gray-50">
               <button
     onClick={processPayment}
-    disabled={paymentMethod === "Cash" && (!cashAmount || parseFloat(cashAmount) < totalCart)}
+    disabled={isProcessing || (paymentMethod === "Cash" && (!cashAmount || parseFloat(cashAmount) < totalCart))}
     className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-green-200"
   >
-                Complete Payment
+                {isProcessing ? "Processing..." : "Complete Payment"}
               </button>
             </div>
           </div>
