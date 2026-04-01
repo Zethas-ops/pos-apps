@@ -337,7 +337,7 @@ function Dashboard() {
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-bold text-gray-800">Sales Last 7 Days</h2>
+            <h2 className="text-lg font-bold text-gray-800">Sales Last</h2>
             {isAdmin && <button
     onClick={handleExportCSV}
     className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
@@ -411,8 +411,10 @@ function Dashboard() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
               <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} />
               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} tickFormatter={(val) => `${val / 1e3}k`} />
-              <Tooltip cursor={{ fill: "#f9fafb" }} contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
-              <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={60} />
+              <Tooltip cursor={{ fill: "#f9fafb" }} contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                formatter={(value) => `Rp ${value.toLocaleString("id-ID")}`}
+              />
+              <Bar dataKey="revenue" name="Revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={60} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -438,7 +440,13 @@ function Dashboard() {
               <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} />
               <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} />
               <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} tickFormatter={(val) => `${val / 1e3}k`} />
-              <Tooltip cursor={{ fill: "#f9fafb" }} contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
+              <Tooltip formatter={(value, name) => {
+                if (name === "Revenue") {
+                  return `Rp ${value.toLocaleString("id-ID")}`;
+                }
+                  return value; // orders tetap angka biasa
+                }}
+              />
               <Legend iconType="square" wrapperStyle={{ fontSize: "12px" }} />
               <Bar yAxisId="left" dataKey="orders" name="Orders" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
               <Bar yAxisId="right" dataKey="revenue" name="Revenue" fill="#60a5fa" radius={[4, 4, 0, 0]} maxBarSize={40} />
