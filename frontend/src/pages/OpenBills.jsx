@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Search, Edit, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { supabase } from "../lib/supabase";
+
+const TIMEZONE = 'Asia/Jakarta';
 
 function OpenBills() {
   const [bills, setBills] = useState([]);
@@ -63,7 +67,7 @@ function OpenBills() {
                   <p className="text-sm text-gray-500 font-medium">Table {bill.table_no}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-400 font-medium">{new Date(bill.created_at).toLocaleTimeString()}</p>
+                  <p className="text-xs text-gray-400 font-medium">{format(toZonedTime(new Date(bill.created_at), TIMEZONE), "HH:mm:ss")}</p>
                   <p className="font-black text-blue-600">Rp {total.toLocaleString()}</p>
                 </div>
               </div>

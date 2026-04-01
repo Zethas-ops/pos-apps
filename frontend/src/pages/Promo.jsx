@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Edit, Power } from "lucide-react";
 import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { supabase } from "../lib/supabase";
+
+const TIMEZONE = 'Asia/Jakarta';
 
 function Promo() {
   const [promos, setPromos] = useState([]);
@@ -231,13 +234,10 @@ function Promo() {
                       Min. Rp {promo.min_nominal?.toLocaleString()}, 
                       Get {promo.free_menu_id ? `Free ${menu.find((m) => m.menu_id === promo.free_menu_id)?.name}` : promo.discount_percent ? `${promo.discount_percent}% OFF` : `Rp ${promo.discount_amount?.toLocaleString()} OFF`}
                     </span>
-                  </div> : <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <span className="text-sm text-gray-500 font-medium block mb-1">Rule</span>
-                    <span className="font-bold text-gray-800">{promo.promo_rule}</span>
-                  </div>}
+                  </div> : null}
 
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p><span className="font-medium">Valid:</span> {format(new Date(promo.start_date), "dd MMM yyyy")} - {format(new Date(promo.end_date), "dd MMM yyyy")}</p>
+                  <p><span className="font-medium">Valid:</span> {format(toZonedTime(new Date(promo.start_date), TIMEZONE), "dd MMM yyyy")} - {format(toZonedTime(new Date(promo.end_date), TIMEZONE), "dd MMM yyyy")}</p>
                   {promo.day_filter && <p><span className="font-medium">Days:</span> {promo.day_filter}</p>}
                   {promo.time_filter && <p><span className="font-medium">Time:</span> {promo.time_filter}</p>}
                 </div>
@@ -303,7 +303,6 @@ function Promo() {
                     <option value="MIN_BUY_FREE">Minimum Buy X Free Y</option>
                     <option value="MIN_BUY_DISCOUNT">Minimum Buy X Discount Y</option>
                     <option value="MIN_NOMINAL_FREE">Minimum Nominal Free/Discount</option>
-                    <option value="PROMO">Custom Rule (e.g., Buy 1 Get 1)</option>
                   </select>
                 </div>
               </div>
@@ -441,17 +440,7 @@ function Promo() {
     placeholder="e.g., 15"
   />
                   </div>
-                </div> : <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Promotion Rule *</label>
-                  <input
-    required
-    type="text"
-    value={formData.promo_rule}
-    onChange={(e) => setFormData({ ...formData, promo_rule: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
-    placeholder="e.g., Buy 1 Get 1 Free Kopi Susu"
-  />
-                </div>}
+                </div> : null}
 
               <div className="grid grid-cols-2 gap-6">
                 <div>

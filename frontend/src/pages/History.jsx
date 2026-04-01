@@ -1,16 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { Search, Printer, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { supabase } from "../lib/supabase";
+
+const TIMEZONE = 'Asia/Jakarta';
 
 function History() {
   const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [expandedId, setExpandedId] = useState(null);
+  const [storeProfile, setStoreProfile] = useState(null);
+
   useEffect(() => {
     fetchHistory();
+    fetchStoreProfile();
   }, []);
+
+  const fetchStoreProfile = async () => {
+    try {
+      const { data, error } = await supabase.from('store_profile').select('*').single();
+      if (!error && data) {
+        setStoreProfile(data);
+      }
+    } catch (err) {
+      console.error("Error fetching store profile:", err);
+    }
+  };
+
   const fetchHistory = async () => {
     try {
       const { data, error } = await supabase
@@ -70,33 +88,61 @@ function History() {
         </head>
         <body>
           <div class="header">
-            <h1>Coffee Shop</h1>
+            <h1>${storeProfile?.store_name || "Coffee Shop"}</h1>
+            <p>${storeProfile?.address || "Address"}</p>
+            <p>${storeProfile?.phone || "Phone"}</p>
+            <div class="divider"></div>
             <p>Receipt #${transaction.transaction_id}</p>
-            <p>${format(new Date(transaction.date), "dd MMM yyyy, HH:mm")}</p>
+            <p>${format(toZonedTime(new Date(transaction.date), TIMEZONE), "dd MMM yyyy, HH:mm")}</p>
             <p>Customer: ${transaction.customer_name} | Table: ${transaction.table_no}</p>
           </div>
           <div class="divider"></div>
           ${transaction.items.map((item) => `
             <div class="item">
               <div class="item-name">
-                ${item.menu_name}
+                ${item.menu_name} ${item.drink_type ? `(${item.drink_type})` : ""}
                 ${item.addons && item.addons.length > 0 ? `<br><small>+ ${item.addons.map((a) => a.name).join(", ")}</small>` : ""}
               </div>
               <div class="item-qty">x${item.qty}</div>
-              <div class="item-price">Rp ${item.subtotal.toLocaleString()}</div>
+              <div class="item-price">Rp ${Number(item.subtotal || 0).toLocaleString()}</div>
             </div>
           `).join("")}
           <div class="divider"></div>
-          <div class="item total">
-            <span>Total</span>
-            <span>Rp ${transaction.total_price.toLocaleString()}</span>
+          <div class="item">
+            <span>Subtotal</span>
+            <span>Rp ${Number(transaction.subtotal || 0).toLocaleString()}</span>
           </div>
+          ${Number(transaction.discount || 0) > 0 ? `
+          <div class="item">
+            <span>Discount</span>
+            <span>-Rp ${Number(transaction.discount || 0).toLocaleString()}</span>
+          </div>
+          ` : ""}
+          <div class="item">
+            <span>PPN 11%</span>
+            <span>Rp ${Number(transaction.tax || 0).toLocaleString()}</span>
+          </div>
+          <div class="item total">
+            <span>Total Payment</span>
+            <span>Rp ${Number(transaction.total_price || 0).toLocaleString()}</span>
+          </div>
+          <div class="divider"></div>
+          ${transaction.payment_method === "Cash" ? `
+          <div class="item">
+            <span>Amount Cash</span>
+            <span>Rp ${Number(transaction.cash_amount || 0).toLocaleString()}</span>
+          </div>
+          <div class="item">
+            <span>Change</span>
+            <span>Rp ${Number(transaction.change_amount || 0).toLocaleString()}</span>
+          </div>
+          ` : ""}
           <div class="item">
             <span>Payment Method</span>
             <span>${transaction.payment_method}</span>
           </div>
           <div class="footer">
-            <p>Thank you for your visit!</p>
+            <p>*** THANK YOU ***</p>
           </div>
         </body>
       </html>
@@ -168,10 +214,10 @@ function History() {
                       <span>#{t.transaction_id}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-gray-600">{format(new Date(t.date), "dd MMM yyyy, HH:mm")}</td>
+                  <td className="p-4 text-gray-600">{format(toZonedTime(new Date(t.date), TIMEZONE), "dd MMM yyyy, HH:mm")}</td>
                   <td className="p-4 font-medium text-gray-800">{t.customer_name}</td>
                   <td className="p-4 text-gray-600">{t.table_no}</td>
-                  <td className="p-4 font-bold text-blue-600">Rp {t.total_price.toLocaleString()}</td>
+                  <td className="p-4 font-bold text-blue-600">Rp {Number(t.total_price || 0).toLocaleString()}</td>
                   <td className="p-4">
                     <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
                       {t.payment_method}

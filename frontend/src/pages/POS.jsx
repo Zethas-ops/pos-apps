@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { Plus, Minus, Trash2, Search, X, Check, ShoppingBag } from "lucide-react";
 import { clsx } from "clsx";
 import { useLocation } from "react-router-dom";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { supabase } from "../lib/supabase";
+
+const TIMEZONE = 'Asia/Jakarta';
 
 function POS() {
   const location = useLocation();
@@ -573,7 +577,7 @@ function POS() {
               <p>${storeProfile?.phone || "Phone"}</p>
               <div class="divider"></div>
               <p>Receipt #${transaction.transaction_id}</p>
-              <p>${(/* @__PURE__ */ new Date()).toLocaleString()}</p>
+              <p>${format(toZonedTime(new Date(), TIMEZONE), "dd MMM yyyy, HH:mm")}</p>
               <p>Customer: ${customerName} | Table: ${tableNo}</p>
             </div>
             <div class="divider"></div>
@@ -584,27 +588,27 @@ function POS() {
                   ${item.addons && item.addons.length > 0 ? `<br><small>+ ${item.addons.map((a) => a.name).join(", ")}</small>` : ""}
                 </div>
                 <div class="item-qty">x${item.qty}</div>
-                <div class="item-price">Rp ${item.subtotal.toLocaleString()}</div>
+                <div class="item-price">Rp ${Number(item.subtotal || 0).toLocaleString()}</div>
               </div>
             `).join("")}
             <div class="divider"></div>
             <div class="item">
               <span>Subtotal</span>
-              <span>Rp ${totals.subtotal.toLocaleString()}</span>
+              <span>Rp ${Number(totals.subtotal || 0).toLocaleString()}</span>
             </div>
             ${totals.discount > 0 ? `
             <div class="item">
               <span>Discount</span>
-              <span>-Rp ${totals.discount.toLocaleString()}</span>
+              <span>-Rp ${Number(totals.discount || 0).toLocaleString()}</span>
             </div>
             ` : ""}
             <div class="item">
               <span>PPN 11%</span>
-              <span>Rp ${totals.tax.toLocaleString()}</span>
+              <span>Rp ${Number(totals.tax || 0).toLocaleString()}</span>
             </div>
             <div class="item total">
               <span>Total Payment</span>
-              <span>Rp ${totals.total.toLocaleString()}</span>
+              <span>Rp ${Number(totals.total || 0).toLocaleString()}</span>
             </div>
             <div class="divider"></div>
             ${paymentMethod === "Cash" ? `
@@ -814,7 +818,7 @@ function POS() {
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <h3 className="font-semibold text-gray-800 leading-tight mb-2">{item.name}</h3>
-                  <p className="text-blue-600 font-bold">Rp {item.price.toLocaleString()}</p>
+                  <p className="text-blue-600 font-bold">Rp {Number(item.price || 0).toLocaleString()}</p>
                 </div>
               </div>;
   })}
@@ -849,7 +853,7 @@ function POS() {
                       {item.addons.map((a, i) => <p key={i}>+ {a.name} (Rp {a.price})</p>)}
                     </div>
                   </div>
-                  <p className="font-bold text-blue-600">Rp {item.subtotal.toLocaleString()}</p>
+                  <p className="font-bold text-blue-600">Rp {Number(item.subtotal || 0).toLocaleString()}</p>
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
                   <div className="flex items-center space-x-3 bg-white rounded-lg border border-gray-200 p-1">
@@ -900,19 +904,19 @@ function POS() {
             
             <div className="flex justify-between items-center py-1">
               <span className="text-gray-500 text-sm">Subtotal</span>
-              <span className="font-medium text-gray-800">Rp {totals.subtotal.toLocaleString()}</span>
+              <span className="font-medium text-gray-800">Rp {Number(totals.subtotal || 0).toLocaleString()}</span>
             </div>
             {totals.discount > 0 && <div className="flex justify-between items-center py-1">
                 <span className="text-green-500 text-sm">Discount</span>
-                <span className="font-medium text-green-600">-Rp {totals.discount.toLocaleString()}</span>
+                <span className="font-medium text-green-600">-Rp {Number(totals.discount || 0).toLocaleString()}</span>
               </div>}
             <div className="flex justify-between items-center py-1">
               <span className="text-gray-500 text-sm">PPN 11%</span>
-              <span className="font-medium text-gray-800">Rp {totals.tax.toLocaleString()}</span>
+              <span className="font-medium text-gray-800">Rp {Number(totals.tax || 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-t border-gray-100 mt-2">
               <span className="text-gray-500 font-bold">Total</span>
-              <span className="text-2xl font-black text-gray-800">Rp {totals.total.toLocaleString()}</span>
+              <span className="text-2xl font-black text-gray-800">Rp {Number(totals.total || 0).toLocaleString()}</span>
             </div>
           </div>
 
@@ -1040,7 +1044,7 @@ function POS() {
                             </div>
                             <span className="font-medium text-gray-800">{addon.name} {outOfStock && <span className="text-xs text-red-500 ml-2">(Out of Stock)</span>}</span>
                           </div>
-                          <span className="text-gray-500">+ Rp {addon.price.toLocaleString()}</span>
+                          <span className="text-gray-500">+ Rp {Number(addon.price || 0).toLocaleString()}</span>
                         </button>;
   })}
                   </div>
@@ -1052,7 +1056,7 @@ function POS() {
     onClick={handleAddToCart}
     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-blue-200"
   >
-                Add to Order - Rp {((selectedMenu.price + selectedAddons.reduce((s, a) => s + a.price, 0)) * qty).toLocaleString()}
+                Add to Order - Rp {Number(((selectedMenu.price + selectedAddons.reduce((s, a) => s + a.price, 0)) * qty) || 0).toLocaleString()}
               </button>
             </div>
           </div>
@@ -1073,7 +1077,7 @@ function POS() {
             <div className="p-6 space-y-6">
               <div className="text-center">
                 <p className="text-gray-500 font-medium mb-1">Total Amount</p>
-                <p className="text-4xl font-black text-gray-800">Rp {totalCart.toLocaleString()}</p>
+                <p className="text-4xl font-black text-gray-800">Rp {Number(totalCart || 0).toLocaleString()}</p>
               </div>
 
               <div>
@@ -1111,7 +1115,7 @@ function POS() {
                   </div>
                   {parseFloat(cashAmount) >= totalCart && <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
                       <span className="text-green-800 font-medium">Change</span>
-                      <span className="text-xl font-bold text-green-700">Rp {(parseFloat(cashAmount) - totalCart).toLocaleString()}</span>
+                      <span className="text-xl font-bold text-green-700">Rp {Number((parseFloat(cashAmount) - totalCart) || 0).toLocaleString()}</span>
                     </div>}
                 </div>}
 

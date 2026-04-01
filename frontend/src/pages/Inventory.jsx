@@ -133,7 +133,7 @@ function Inventory() {
                 <td className="p-4 font-medium text-gray-800">{item.ingredient_name}</td>
                 <td className="p-4">
                   <span className={`font-bold ${item.current_stock <= 10 ? "text-red-600" : "text-green-600"}`}>
-                    {item.current_stock}
+                    {Number(item.current_stock || 0).toLocaleString()}
                   </span>
                 </td>
                 <td className="p-4 text-gray-600">{item.unit}</td>
@@ -269,7 +269,7 @@ function Inventory() {
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
-                  Current Stock: <span className="font-bold">{selectedItem.current_stock} {selectedItem.unit}</span>
+                  Current Stock: <span className="font-bold">{Number(selectedItem.current_stock || 0).toLocaleString()} {selectedItem.unit}</span>
                 </p>
               </div>
               <div className="flex justify-end space-x-3 pt-4">
