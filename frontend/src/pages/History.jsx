@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Search, Printer, Calendar, ChevronDown, ChevronUp } from "lucide-react";
-import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
 import { supabase } from "../lib/supabase";
+import moment from "moment-timezone";
 
 const TIMEZONE = 'Asia/Jakarta';
 
@@ -41,6 +40,7 @@ function History() {
       // Map the data to match the expected format
       const formattedData = data.map(t => ({
         ...t,
+        date: moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss"),
         items: (t.transaction_items || []).map(item => {
           let parsedAddons = [];
           if (typeof item.addons === 'string') {
@@ -60,6 +60,7 @@ function History() {
       }));
       
       setTransactions(formattedData);
+      console.log("Fetched transactions:", formattedData);
     } catch (err) {
       console.error("Error fetching history:", err);
     }
@@ -93,7 +94,7 @@ function History() {
             <p>${storeProfile?.phone || "Phone"}</p>
             <div class="divider"></div>
             <p>Receipt #${transaction.transaction_id}</p>
-            <p>${format(toZonedTime(new Date(transaction.date), TIMEZONE), "dd MMM yyyy, HH:mm")}</p>
+            <p>${transaction.date}</p>
             <p>Customer: ${transaction.customer_name} | Table: ${transaction.table_no}</p>
           </div>
           <div class="divider"></div>
@@ -214,7 +215,7 @@ function History() {
                       <span>#{t.transaction_id}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-gray-600">{format(toZonedTime(new Date(t.date), TIMEZONE), "dd MMM yyyy, HH:mm")}</td>
+                  <td className="p-4 text-gray-600">{t.date}</td>
                   <td className="p-4 font-medium text-gray-800">{t.customer_name}</td>
                   <td className="p-4 text-gray-600">{t.table_no}</td>
                   <td className="p-4 font-bold text-blue-600">Rp {Number(t.total_price || 0).toLocaleString()}</td>
