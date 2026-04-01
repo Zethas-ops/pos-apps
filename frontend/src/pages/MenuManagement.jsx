@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Plus, Edit, Trash2, Image as ImageIcon, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Search, Tag, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 function MenuManagement() {
   const [menu, setMenu] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editId, setEditId] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [search, setSearch] = useState("");
@@ -67,8 +68,8 @@ function MenuManagement() {
       setIngredients(invRes.data || []);
       
       const uniqueCategories = Array.from(new Set(menuData.map((item) => item.category)));
-      const mergedCategories = Array.from(new Set(["Coffee", "Non-Coffee", "Food", "Beverage", "Add-Ons", ...uniqueCategories]));
-      setCategories(mergedCategories);
+      const finalCategories = Array.from(new Set(["Add-Ons", ...uniqueCategories]));
+      setCategories(finalCategories);
     } catch (err) {
       console.error("Error fetching data:", err);
     }
@@ -81,6 +82,11 @@ function MenuManagement() {
       return;
     }
     const finalCategory = showNewCategoryInput && newCategory.trim() !== "" ? newCategory.trim() : formData.category;
+    
+    if (showNewCategoryInput && categories.some(c => c.toLowerCase() === finalCategory.toLowerCase())) {
+      alert("Category already exists. Please select it from the dropdown.");
+      return;
+    }
     
     try {
       let imageUrl = formData.image;
@@ -204,6 +210,21 @@ function MenuManagement() {
       alert("Error deleting menu: " + err.message);
     }
   };
+  const handleDeleteCategory = async (categoryToDelete) => {
+    if (window.confirm(`Are you sure you want to delete the category "${categoryToDelete}"? All menu items in this category will be moved to "Uncategorized".`)) {
+      try {
+        const { error } = await supabase
+          .from('menu')
+          .update({ category: 'Uncategorized' })
+          .eq('category', categoryToDelete);
+        
+        if (error) throw error;
+        fetchData();
+      } catch (err) {
+        alert("Error deleting category: " + err.message);
+      }
+    }
+  };
   const handleEdit = (item) => {
     setEditId(item.menu_id);
     setShowNewCategoryInput(false);
@@ -249,6 +270,13 @@ function MenuManagement() {
     className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
           </div>
+          <button
+            onClick={() => setShowCategoryModal(true)}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-xl flex items-center space-x-2 transition-colors shadow-sm whitespace-nowrap"
+          >
+            <Tag size={20} />
+            <span>Categories</span>
+          </button>
           <button
     onClick={() => {
       setEditId(null);
@@ -551,6 +579,42 @@ function MenuManagement() {
   >
                 Delete
               </button>
+            </div>
+          </div>
+        </div>}
+
+      {/* Category Management Modal */}
+      {showCategoryModal && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+              <h3 className="text-xl font-bold text-gray-800">Manage Categories</h3>
+              <button onClick={() => setShowCategoryModal(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <p className="text-sm text-gray-500 mb-4">
+                Deleting a category will move all its menu items to "Uncategorized".
+              </p>
+              <div className="space-y-2">
+                {categories.map((cat) => (
+                  <div key={cat} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <span className="font-medium text-gray-800">{cat}</span>
+                    {cat !== "Add-Ons" && cat !== "Uncategorized" && (
+                      <button
+                        onClick={() => handleDeleteCategory(cat)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Category"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {categories.length === 0 && (
+                  <p className="text-center text-gray-500 py-4">No categories found.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>}
