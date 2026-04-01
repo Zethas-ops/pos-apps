@@ -822,7 +822,7 @@ function POS() {
         {
     /* Header */
   }
-        <div className="p-4 bg-white border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-5 bg-white border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex space-x-2 overflow-x-auto pb-2 w-full sm:w-auto">
             {categories.map((cat) => <button
     key={cat}
@@ -883,7 +883,7 @@ function POS() {
     /* Right Side - Cart */
   }
       <div className="w-96 bg-white flex flex-col h-full shadow-xl z-10">
-        <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+        <div className="p-7.5 border-b bg-gray-50 flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800">Current Order</h2>
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">
             {cart.length} items
