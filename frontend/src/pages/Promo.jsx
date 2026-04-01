@@ -228,14 +228,14 @@ function Promo() {
                     <span className="text-sm text-gray-500 font-medium block mb-1">Buy X Get Discount</span>
                     <span className="font-bold text-gray-800">
                       Buy {promo.min_buy_qty} {menu.find((m) => m.menu_id === promo.min_buy_menu_id)?.name || "Item"}, 
-                      Get {promo.discount_percent ? `${promo.discount_percent}% OFF` : `Rp ${promo.discount_amount?.toLocaleString()} OFF`}
+                      Get {promo.discount_percent ? `${promo.discount_percent}% OFF` : `Rp ${promo.discount_amount?.toLocaleString("id-ID")} OFF`}
                       {promo.free_menu_id ? ` on ${promo.free_qty || 'Any'} ${menu.find((m) => m.menu_id === promo.free_menu_id)?.name || "Item"}` : ""}
                     </span>
                   </div> : promo.type === "MIN_NOMINAL_FREE" ? <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <span className="text-sm text-gray-500 font-medium block mb-1">Min. Nominal Get Free/Discount</span>
                     <span className="font-bold text-gray-800">
-                      Min. Rp {promo.min_nominal?.toLocaleString()}, 
-                      Get {promo.free_menu_id ? `Free ${menu.find((m) => m.menu_id === promo.free_menu_id)?.name}` : promo.discount_percent ? `${promo.discount_percent}% OFF` : `Rp ${promo.discount_amount?.toLocaleString()} OFF`}
+                      Min. Rp {promo.min_nominal?.toLocaleString("id-ID")}, 
+                      Get {promo.free_menu_id ? `Free ${menu.find((m) => m.menu_id === promo.free_menu_id)?.name}` : promo.discount_percent ? `${promo.discount_percent}% OFF` : `Rp ${promo.discount_amount?.toLocaleString("id-ID")} OFF`}
                     </span>
                   </div> : null}
 

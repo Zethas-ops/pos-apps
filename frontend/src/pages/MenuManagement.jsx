@@ -306,7 +306,7 @@ function MenuManagement() {
             <div className="p-4 flex-1 flex flex-col justify-between">
               <div>
                 <h3 className="font-bold text-gray-800 text-lg leading-tight mb-1">{item.name}</h3>
-                <p className="text-blue-600 font-bold text-xl mb-4">Rp {item.price.toLocaleString()}</p>
+                <p className="text-blue-600 font-bold text-xl mb-4">Rp {item.price.toLocaleString("id-ID")}</p>
                 
                 {item.recipes && item.recipes.length > 0 && <div className="mb-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Ingredients</p>

@@ -292,7 +292,7 @@ function Dashboard() {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Today's Revenue</p>
-            <p className="text-2xl font-bold text-gray-900">Rp {metrics.todaySales?.toLocaleString() || 0}</p>
+            <p className="text-2xl font-bold text-gray-900">Rp {metrics.todaySales?.toLocaleString("id-ID") || 0}</p>
             <p className="text-xs text-gray-500 mt-1">{metrics.todayOrders || 0} orders</p>
           </div>
           <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
@@ -303,7 +303,7 @@ function Dashboard() {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">This Week</p>
-            <p className="text-2xl font-bold text-gray-900">Rp {metrics.weekSales?.toLocaleString() || 0}</p>
+            <p className="text-2xl font-bold text-gray-900">Rp {metrics.weekSales?.toLocaleString("id-ID") || 0}</p>
           </div>
           <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
             <Calendar size={20} />
@@ -313,7 +313,7 @@ function Dashboard() {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">This Month</p>
-            <p className="text-2xl font-bold text-gray-900">Rp {metrics.monthSales?.toLocaleString() || 0}</p>
+            <p className="text-2xl font-bold text-gray-900">Rp {metrics.monthSales?.toLocaleString("id-ID") || 0}</p>
           </div>
           <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
             <TrendingUp size={20} />
@@ -430,7 +430,7 @@ function Dashboard() {
             <h2 className="text-lg font-bold text-gray-800">Today's Hourly Traffic</h2>
           </div>
           {peakHour && <div className="text-sm text-gray-600">
-              Peak: <span className="font-bold">{peakHour.label}</span> - {peakHour.orders} orders - Rp {peakHour.revenue.toLocaleString()}
+              Peak: <span className="font-bold">{peakHour.label}</span> - {peakHour.orders} orders - Rp {peakHour.revenue.toLocaleString("id-ID")}
             </div>}
         </div>
         <div className="h-64">
@@ -501,7 +501,7 @@ function Dashboard() {
                   </div>
                 </div>
                 <div className="text-sm font-bold text-gray-900">
-                  Rp {item.revenue.toLocaleString()}
+                  Rp {item.revenue.toLocaleString("id-ID")}
                 </div>
               </div>)}
             {(!charts.topSelling || charts.topSelling.length === 0) && <div className="text-center text-gray-500 py-8">No sales data available</div>}

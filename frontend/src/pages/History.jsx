@@ -103,37 +103,37 @@ function History() {
                 ${item.addons && item.addons.length > 0 ? `<br><small>+ ${item.addons.map((a) => a.name).join(", ")}</small>` : ""}
               </div>
               <div class="item-qty">x${item.qty}</div>
-              <div class="item-price">Rp ${Number(item.subtotal || 0).toLocaleString()}</div>
+              <div class="item-price">Rp ${Number(item.subtotal || 0).toLocaleString("id-ID")}</div>
             </div>
           `).join("")}
           <div class="divider"></div>
           <div class="item">
             <span>Subtotal</span>
-            <span>Rp ${Number(transaction.subtotal || 0).toLocaleString()}</span>
+            <span>Rp ${Number(transaction.subtotal || 0).toLocaleString("id-ID")}</span>
           </div>
           ${Number(transaction.discount || 0) > 0 ? `
           <div class="item">
             <span>Discount</span>
-            <span>-Rp ${Number(transaction.discount || 0).toLocaleString()}</span>
+            <span>-Rp ${Number(transaction.discount || 0).toLocaleString("id-ID")}</span>
           </div>
           ` : ""}
           <div class="item">
             <span>PPN 11%</span>
-            <span>Rp ${Number(transaction.tax || 0).toLocaleString()}</span>
+            <span>Rp ${Number(transaction.tax || 0).toLocaleString("id-ID")}</span>
           </div>
           <div class="item total">
             <span>Total Payment</span>
-            <span>Rp ${Number(transaction.total_price || 0).toLocaleString()}</span>
+            <span>Rp ${Number(transaction.total_price || 0).toLocaleString("id-ID")}</span>
           </div>
           <div class="divider"></div>
           ${transaction.payment_method === "Cash" ? `
           <div class="item">
             <span>Amount Cash</span>
-            <span>Rp ${Number(transaction.cash_amount || 0).toLocaleString()}</span>
+            <span>Rp ${Number(transaction.cash_amount || 0).toLocaleString("id-ID")}</span>
           </div>
           <div class="item">
             <span>Change</span>
-            <span>Rp ${Number(transaction.change_amount || 0).toLocaleString()}</span>
+            <span>Rp ${Number(transaction.change_amount || 0).toLocaleString("id-ID")}</span>
           </div>
           ` : ""}
           <div class="item">
@@ -217,7 +217,7 @@ function History() {
                   <td className="p-4 text-gray-600">{moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</td>
                   <td className="p-4 font-medium text-gray-800">{t.customer_name}</td>
                   <td className="p-4 text-gray-600">{t.table_no}</td>
-                  <td className="p-4 font-bold text-blue-600">Rp {Number(t.total_price || 0).toLocaleString()}</td>
+                  <td className="p-4 font-bold text-blue-600">Rp {Number(t.total_price || 0).toLocaleString("id-ID")}</td>
                   <td className="p-4">
                     <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
                       {t.payment_method}
@@ -256,25 +256,25 @@ function History() {
                                     + {item.addons.map((a) => a.name).join(", ")}
                                   </p>}
                               </div>
-                              <p className="font-medium text-gray-800">Rp {Number(item.subtotal || 0).toLocaleString()}</p>
+                              <p className="font-medium text-gray-800">Rp {Number(item.subtotal || 0).toLocaleString("id-ID")}</p>
                             </div>)}
                         </div>
                         <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end space-x-8 text-sm">
                           <div className="text-right">
                             <p className="text-gray-500 mb-1">Subtotal</p>
-                            <p className="font-medium text-gray-800">Rp {Number(t.subtotal || 0).toLocaleString()}</p>
+                            <p className="font-medium text-gray-800">Rp {Number(t.subtotal || 0).toLocaleString("id-ID")}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-gray-500 mb-1">Tax</p>
-                            <p className="font-medium text-gray-800">Rp {Number(t.tax || 0).toLocaleString()}</p>
+                            <p className="font-medium text-gray-800">Rp {Number(t.tax || 0).toLocaleString("id-ID")}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-gray-500 mb-1">Discount</p>
-                            <p className="font-medium text-red-600">-Rp {Number(t.discount || 0).toLocaleString()}</p>
+                            <p className="font-medium text-red-600">-Rp {Number(t.discount || 0).toLocaleString("id-ID")}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-gray-500 mb-1">Total</p>
-                            <p className="font-bold text-blue-600 text-lg">Rp {Number(t.total_price || 0).toLocaleString()}</p>
+                            <p className="font-bold text-blue-600 text-lg">Rp {Number(t.total_price || 0).toLocaleString("id-ID")}</p>
                           </div>
                         </div>
                       </div>

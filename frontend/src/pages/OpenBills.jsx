@@ -68,14 +68,14 @@ function OpenBills() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-400 font-medium">{format(toZonedTime(new Date(bill.created_at), TIMEZONE), "HH:mm:ss")}</p>
-                  <p className="font-black text-blue-600">Rp {total.toLocaleString()}</p>
+                  <p className="font-black text-blue-600">Rp {total.toLocaleString("id-ID")}</p>
                 </div>
               </div>
               
               <div className="p-4 flex-1 overflow-y-auto max-h-48 space-y-2">
                 {bill.items.map((item, idx) => <div key={idx} className="flex justify-between text-sm">
                     <span className="text-gray-700 font-medium">{item.qty}x {item.menu_name}</span>
-                    <span className="text-gray-500">Rp {Number(item.subtotal || 0).toLocaleString()}</span>
+                    <span className="text-gray-500">Rp {Number(item.subtotal || 0).toLocaleString("id-ID")}</span>
                   </div>)}
               </div>
 
