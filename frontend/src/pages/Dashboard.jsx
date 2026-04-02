@@ -351,7 +351,7 @@ function Dashboard() {
             </h2>
             {isAdmin && <button
     onClick={handleExportCSV}
-    className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center space-x-2 transition-colors shadow-md shadow-blue-200 whitespace-nowrap"
   >
                 <Download size={16} />
                 <span>Export CSV</span>

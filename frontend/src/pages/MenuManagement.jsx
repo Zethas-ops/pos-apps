@@ -256,6 +256,22 @@ function MenuManagement() {
   const filteredMenu = menu.filter(
     (item) => item.name.toLowerCase().includes(search.toLowerCase()) || item.category.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleOnChangePrice = (e) => {
+    const value = e.target.value;
+     if (value === "" || (/^\d+$/.test(value) && value.length <= 6)) {
+      setFormData({ ...formData, price: value });
+    }
+    return;
+  }
+
+  const handleOnChangeName = (e) => {
+    const value = e.target.value;
+    if (value.length <= 15) {
+      setFormData({ ...formData, name: value });
+    }
+    return;
+  }
   return <div className="p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Menu Management</h1>
@@ -360,7 +376,7 @@ function MenuManagement() {
     required
     type="text"
     value={formData.name}
-    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+    onChange={(e) => handleOnChangeName(e)}
     className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
                 </div>
@@ -399,8 +415,9 @@ function MenuManagement() {
                   <input
     required
     type="number"
+    maxLength={6}
     value={formData.price}
-    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+    onChange={(e) => handleOnChangePrice(e)}
     className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
                 </div>
