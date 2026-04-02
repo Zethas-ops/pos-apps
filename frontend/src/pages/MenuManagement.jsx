@@ -258,20 +258,28 @@ function MenuManagement() {
   );
 
   const handleOnChangePrice = (e) => {
-    const value = e.target.value;
-     if (value === "" || (/^\d+$/.test(value) && value.length <= 6)) {
-      setFormData({ ...formData, price: value });
-    }
-    return;
+  let value = e.target.value;
+
+  // ambil angka saja
+  const raw = value.replace(/\D/g, "");
+
+  // batas max digit (misal 6)
+  if (raw.length <= 6) {
+    setFormData({ ...formData, price: raw });
   }
+};
 
   const handleOnChangeName = (e) => {
     const value = e.target.value;
     if (value.length <= 15) {
       setFormData({ ...formData, name: value });
     }
-    return;
-  }
+  };
+  
+  const formatRupiah = (value) => {
+    if (!value) return "";
+    return "Rp " + Number(value).toLocaleString("id-ID");
+  };
   return <div className="p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Menu Management</h1>
@@ -411,13 +419,13 @@ function MenuManagement() {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Price (Rp) *</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Price *</label>
                   <input
     required
-    type="number"
-    maxLength={6}
-    value={formData.price}
-    onChange={(e) => handleOnChangePrice(e)}
+    type="text"
+    value={formatRupiah(formData.price)}
+    onChange={handleOnChangePrice}
+    placeholder="Rp 0"
     className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
                 </div>
