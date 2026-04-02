@@ -264,14 +264,14 @@ function MenuManagement() {
   const raw = value.replace(/\D/g, "");
 
   // batas max digit (misal 6)
-  if (raw.length <= 6) {
+  if (raw.length <= 8) {
     setFormData({ ...formData, price: raw });
   }
 };
 
   const handleOnChangeName = (e) => {
     const value = e.target.value;
-    if (value.length <= 15) {
+    if (value.length <= 25) {
       setFormData({ ...formData, name: value });
     }
   };
