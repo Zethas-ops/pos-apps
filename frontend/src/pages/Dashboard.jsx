@@ -233,6 +233,19 @@ function Dashboard() {
         const localDate = moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss");
         if (t.transaction_items && t.transaction_items.length > 0) {
           t.transaction_items.forEach(item => {
+            let parsedAddons = [];
+            if (typeof item.addons === 'string') {
+              try {
+                parsedAddons = JSON.parse(item.addons);
+              } catch (e) {
+                console.error("Error parsing addons:", e);
+              }
+            } else {
+              parsedAddons = item.addons || [];
+            }
+            
+            const addonsString = Array.isArray(parsedAddons) ? parsedAddons.map(a => a.name).join(', ') : '';
+
             csvData.push({
               transaction_id: t.transaction_id,
               date: localDate,
@@ -241,7 +254,7 @@ function Dashboard() {
               payment_method: t.payment_method,
               total_price: t.total_price,
               menu_name: item.menu_name,
-              addons: item.addons && Array.isArray(item.addons) ? item.addons.map(a => a.name).join(', ') : '',
+              addons: addonsString,
               qty: item.qty,
               price: item.price,
               subtotal: item.subtotal
