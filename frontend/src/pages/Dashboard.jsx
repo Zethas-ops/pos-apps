@@ -241,7 +241,7 @@ function Dashboard() {
               payment_method: t.payment_method,
               total_price: t.total_price,
               menu_name: item.menu_name,
-              addons: item.addons ? JSON.stringify(item.addons) : '',
+              addons: item.addons && Array.isArray(item.addons) ? item.addons.map(a => a.name).join(', ') : '',
               qty: item.qty,
               price: item.price,
               subtotal: item.subtotal
