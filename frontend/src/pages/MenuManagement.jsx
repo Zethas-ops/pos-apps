@@ -17,7 +17,6 @@ function MenuManagement() {
     name: "",
     category: "Coffee",
     price: "",
-    image: null,
     addon_target: "All",
     recipes: [],
     addons: []
@@ -89,59 +88,14 @@ function MenuManagement() {
     }
     
     try {
-      let imageUrl = formData.image;
       let addonTarget = finalCategory === "Add-Ons" ? formData.addon_target : null;
-      
-      // If image is a File object, convert to base64 and resize
-      if (formData.image instanceof File) {
-        imageUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              const MAX_WIDTH = 400;
-              const MAX_HEIGHT = 400;
-              let width = img.width;
-              let height = img.height;
-
-              if (width > height) {
-                if (width > MAX_WIDTH) {
-                  height *= MAX_WIDTH / width;
-                  width = MAX_WIDTH;
-                }
-              } else {
-                if (height > MAX_HEIGHT) {
-                  width *= MAX_HEIGHT / height;
-                  height = MAX_HEIGHT;
-                }
-              }
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL('image/jpeg', 0.8));
-            };
-            img.onerror = reject;
-            img.src = reader.result;
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(formData.image);
-        });
-      }
-
-      // If image is too long for VARCHAR(255), store it in addon_target (TEXT)
-      if (typeof imageUrl === 'string' && imageUrl.length > 255) {
-        addonTarget = `${addonTarget || ''}|||${imageUrl}`;
-        imageUrl = null;
-      }
 
       const menuPayload = {
         name: formData.name,
         category: finalCategory,
         price: parseFloat(formData.price),
         addon_target: addonTarget,
-        image: imageUrl
+        image: null
       };
 
       let currentMenuId = editId;
@@ -193,10 +147,14 @@ function MenuManagement() {
       setEditId(null);
       setShowNewCategoryInput(false);
       setNewCategory("");
-      setFormData({ name: "", category: "Coffee", price: "", image: null, addon_target: "All", recipes: [], addons: [] });
+      setFormData({ name: "", category: "Coffee", price: "", addon_target: "All", recipes: [], addons: [] });
       fetchData();
     } catch (err) {
-      alert("Error saving menu: " + err.message);
+      if (err.message === "Failed to fetch" || err.message.includes("fetch")) {
+        alert("Error saving menu: Failed to connect to database. Please make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are correctly set in the Secrets panel.");
+      } else {
+        alert("Error saving menu: " + err.message);
+      }
     }
   };
   const confirmDelete = async () => {
@@ -233,7 +191,6 @@ function MenuManagement() {
       name: item.name,
       category: item.category,
       price: item.price.toString(),
-      image: item.image || null,
       addon_target: item.addon_target || "All",
       recipes: item.recipes || [],
       addons: item.addons?.map((a) => a.menu_id) || []
@@ -319,10 +276,10 @@ function MenuManagement() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredMenu.map((item) => <div key={item.menu_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-            <div className="h-48 bg-gray-200 relative">
-              {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <ImageIcon size={48} className="opacity-50" />
-                </div>}
+            <div className="h-48 bg-blue-50 relative flex items-center justify-center">
+              <span className="text-blue-500 font-bold text-6xl opacity-30 select-none">
+                {item.name ? item.name.charAt(0).toUpperCase() : '?'}
+              </span>
               <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded-lg text-xs font-bold text-gray-800">
                 {item.category}
               </div>
@@ -428,20 +385,6 @@ function MenuManagement() {
     placeholder="Rp 0"
     className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Image</label>
-                  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
-    className="w-full p-3 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-  />
-                  {formData.image && (
-                    <div className="mt-3 h-32 w-32 rounded-xl overflow-hidden border border-gray-200">
-                      <img src={typeof formData.image === 'string' ? formData.image : URL.createObjectURL(formData.image)} alt="Preview" className="w-full h-full object-cover" />
-                    </div>
-                  )}
                 </div>
               </div>
 

@@ -9,9 +9,16 @@ function Settings() {
     address: "",
     phone: ""
   });
+  const [ppnSetting, setPpnSetting] = useState({
+    value: "11",
+    isActive: true
+  });
+
   useEffect(() => {
     fetchProfile();
+    fetchPpnSetting();
   }, []);
+
   const fetchProfile = async () => {
     try {
       const { data, error } = await supabase
@@ -19,12 +26,32 @@ function Settings() {
         .select('*')
         .single();
         
-      if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned"
+      if (error && error.code !== 'PGRST116') throw error;
       if (data) setProfile(data);
     } catch (err) {
       console.error("Error fetching profile:", err);
     }
   };
+
+  const fetchPpnSetting = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('setting_key', 'PPN')
+        .single();
+        
+      if (!error && data) {
+        setPpnSetting({
+          value: data.setting_value,
+          isActive: data.is_active
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching PPN setting:", err);
+    }
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     try {
@@ -37,10 +64,23 @@ function Settings() {
           phone: profile.phone
         }, { onConflict: 'id' });
         
+      const { error: ppnError } = await supabase
+        .from('settings')
+        .upsert({
+          setting_key: 'PPN',
+          setting_value: ppnSetting.value,
+          is_active: ppnSetting.isActive
+        }, { onConflict: 'setting_key' });
+        
       if (error) throw error;
-      alert("Store profile updated successfully");
+      if (ppnError) throw ppnError;
+      alert("Settings updated successfully");
     } catch (err) {
-      alert("Error updating profile: " + err.message);
+      if (err.message === "Failed to fetch" || (err.message && err.message.includes("fetch"))) {
+        alert("Error updating settings: Failed to connect to database. Please make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are correctly set.");
+      } else {
+        alert("Error updating settings: " + err.message);
+      }
     }
   };
   return <div className="p-8 space-y-8 max-w-4xl">
@@ -82,6 +122,38 @@ function Settings() {
     className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
           </div>
+          
+          <div className="pt-4 border-t border-gray-100">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Tax Settings</h3>
+            <div className="flex items-center space-x-6">
+              <label className="flex items-center cursor-pointer">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={ppnSetting.isActive}
+                    onChange={(e) => setPpnSetting({ ...ppnSetting, isActive: e.target.checked })}
+                  />
+                  <div className={`block w-14 h-8 rounded-full transition-colors ${ppnSetting.isActive ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                  <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${ppnSetting.isActive ? 'transform translate-x-6' : ''}`}></div>
+                </div>
+                <div className="ml-3 text-gray-700 font-medium">Enable PPN</div>
+              </label>
+              
+              {ppnSetting.isActive && (
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-bold text-gray-700">PPN Rate (%)</label>
+                  <input
+                    type="number"
+                    value={ppnSetting.value}
+                    onChange={(e) => setPpnSetting({ ...ppnSetting, value: e.target.value })}
+                    className="w-20 p-2 text-center rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="flex justify-end pt-4 border-t border-gray-100">
             <button
     type="submit"

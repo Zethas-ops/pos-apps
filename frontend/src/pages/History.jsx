@@ -67,7 +67,7 @@ function History() {
     const receiptContent = `
       <html>
         <head>
-          <title>Receipt #${transaction.transaction_id}</title>
+          <title>Invoice #${transaction.invoice_no || transaction.transaction_id}</title>
           <style>
             body { font-family: monospace; width: 300px; margin: 0 auto; padding: 20px; }
             .header { text-align: center; margin-bottom: 20px; }
@@ -91,7 +91,7 @@ function History() {
             <p>${storeProfile?.address || "Address"}</p>
             <p>${storeProfile?.phone || "Phone"}</p>
             <div class="divider"></div>
-            <p>Receipt #${transaction.transaction_id}</p>
+            <p>Invoice #${transaction.invoice_no || transaction.transaction_id}</p>
             <p>${moment.utc(transaction.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</p>
             <p>Customer: ${transaction.customer_name} | Table: ${transaction.table_no}</p>
           </div>
@@ -160,8 +160,28 @@ function History() {
       document.body.removeChild(iframe);
     }, 1000);
   };
-  const filteredTransactions = transactions.filter((t) => {
-    const matchSearch = t.customer_name.toLowerCase().includes(search.toLowerCase()) || t.transaction_id.toString().includes(search);
+  const transactionsWithInvoice = React.useMemo(() => {
+    // Group all transactions by local date string
+    const groups = {};
+    const sorted = [...transactions].sort((a,b) => a.transaction_id - b.transaction_id);
+    sorted.forEach(t => {
+      const gDate = moment.utc(t.date).tz(TIMEZONE).format('YYYY-MM-DD');
+      if (!groups[gDate]) groups[gDate] = [];
+      groups[gDate].push(t);
+    });
+    
+    // Map with calculated invoice number
+    return transactions.map(t => {
+      const gDate = moment.utc(t.date).tz(TIMEZONE).format('YYYY-MM-DD');
+      const index = (groups[gDate] || []).findIndex(x => x.transaction_id === t.transaction_id);
+      const datePart = moment.utc(t.date).tz(TIMEZONE).format('YYMMDD');
+      const seqPart = String(Math.max(0, index) + 1).padStart(3, '0');
+      return { ...t, invoice_no: `${datePart}${seqPart}` };
+    });
+  }, [transactions]);
+
+  const filteredTransactions = transactionsWithInvoice.filter((t) => {
+    const matchSearch = t.customer_name.toLowerCase().includes(search.toLowerCase()) || t.invoice_no.includes(search);
     const localDate = moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD");
     const matchDate = dateFilter ? localDate === dateFilter : true;
     return matchSearch && matchDate;
@@ -211,7 +231,7 @@ function History() {
                   <td className="p-4 font-medium text-gray-800">
                     <div className="flex items-center space-x-2">
                       {expandedId === t.transaction_id ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
-                      <span>#{t.transaction_id}</span>
+                      <span>#{t.invoice_no}</span>
                     </div>
                   </td>
                   <td className="p-4 text-gray-600">{moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</td>

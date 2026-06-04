@@ -10,6 +10,7 @@ import {
   Tag, 
   Users, 
   Settings as SettingsIcon,
+  CreditCard,
   LogOut
 } from "lucide-react";
 
@@ -35,16 +36,39 @@ function Layout() {
     { path: "/inventory", label: "Inventory", icon: <Package size={20} />, permission: "inventory" },
     { path: "/promo", label: "Promo", icon: <Tag size={20} />, permission: "promo" },
     { path: "/roles", label: "Roles", icon: <Users size={20} />, permission: "roles" },
+    { path: "/payment-methods", label: "Payment Methods", icon: <CreditCard size={20} />, permission: "settings" },
     { path: "/settings", label: "Settings", icon: <SettingsIcon size={20} />, permission: "settings" },
   ];
 
+  // Apply theme on load
+  React.useEffect(() => {
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-600">
-          <h1 className="text-2xl font-bold text-blue-600">POS System</h1>
-          {user && <p className="text-sm text-gray-500 mt-1">Welcome, {user.username}</p>}
+      <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-colors">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">POS System</h1>
+            {user && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Welcome, {user.username}</p>}
+          </div>
+          <button
+            onClick={() => {
+              document.documentElement.classList.toggle('dark');
+              localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            }}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            title="Toggle Dark Mode"
+          >
+            <div className="hidden dark:block">☀️</div>
+            <div className="block dark:hidden">🌙</div>
+          </button>
         </div>
         
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
@@ -58,8 +82,8 @@ function Layout() {
                 to={item.path}
                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive 
-                    ? "bg-blue-50 text-blue-600 font-medium" 
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium" 
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 {item.icon}
@@ -69,10 +93,10 @@ function Layout() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+            className="flex items-center space-x-3 px-4 py-3 w-full rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
           >
             <LogOut size={20} />
             <span>Logout</span>

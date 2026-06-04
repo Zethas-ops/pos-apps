@@ -15,6 +15,8 @@ function POS() {
   const [search, setSearch] = useState("");
   const [storeProfile, setStoreProfile] = useState(null);
   const [promos, setPromos] = useState([]);
+  const [ppnRate, setPpnRate] = useState(0.11);
+  const [paymentMethodsList, setPaymentMethodsList] = useState([]);
   const [cart, setCart] = useState([]);
   const [tableNo, setTableNo] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -25,6 +27,9 @@ function POS() {
   const [drinkType, setDrinkType] = useState("Ice");
   const [sugarLevel, setSugarLevel] = useState("Normal");
   const [selectedAddons, setSelectedAddons] = useState([]);
+  const [itemNote, setItemNote] = useState("");
+  const [transactionNote, setTransactionNote] = useState("");
+  const [selectedPromoId, setSelectedPromoId] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [cashAmount, setCashAmount] = useState("");
@@ -104,28 +109,31 @@ function POS() {
   };
   useEffect(() => {
     if (menu.length === 0 || promos.length === 0) return;
-    const activePromos = promos.filter(isPromoValid);
     const requiredFreeItems = {};
     const nonFreeCart = cart.filter((item) => !item.is_auto_free);
     const subtotal = nonFreeCart.reduce((sum, item) => sum + item.subtotal, 0);
-    activePromos.forEach((promo) => {
-      if (promo.type === "MIN_BUY_FREE") {
-        const buyItems = nonFreeCart.filter((item) => item.menu_id === Number(promo.min_buy_menu_id));
-        const totalBuyQty = buyItems.reduce((sum, item) => sum + item.qty, 0);
-        const minBuyQty = Number(promo.min_buy_qty);
-        if (minBuyQty > 0 && totalBuyQty >= minBuyQty) {
-          const timesApplied = Math.floor(totalBuyQty / minBuyQty);
-          const freeQty = timesApplied * Number(promo.free_qty);
-          if (freeQty > 0) {
-            requiredFreeItems[promo.free_menu_id] = (requiredFreeItems[promo.free_menu_id] || 0) + freeQty;
+    
+    if (selectedPromoId) {
+      const promo = promos.find(p => p.promo_id.toString() === selectedPromoId && isPromoValid(p));
+      if (promo) {
+        if (promo.type === "MIN_BUY_FREE") {
+          const buyItems = nonFreeCart.filter((item) => item.menu_id === Number(promo.min_buy_menu_id));
+          const totalBuyQty = buyItems.reduce((sum, item) => sum + item.qty, 0);
+          const minBuyQty = Number(promo.min_buy_qty);
+          if (minBuyQty > 0 && totalBuyQty >= minBuyQty) {
+            const timesApplied = Math.floor(totalBuyQty / minBuyQty);
+            const freeQty = timesApplied * Number(promo.free_qty);
+            if (freeQty > 0) {
+              requiredFreeItems[promo.free_menu_id] = (requiredFreeItems[promo.free_menu_id] || 0) + freeQty;
+            }
+          }
+        } else if (promo.type === "MIN_NOMINAL_FREE" && promo.free_menu_id) {
+          if (subtotal >= Number(promo.min_nominal)) {
+            requiredFreeItems[promo.free_menu_id] = (requiredFreeItems[promo.free_menu_id] || 0) + 1;
           }
         }
-      } else if (promo.type === "MIN_NOMINAL_FREE" && promo.free_menu_id) {
-        if (subtotal >= Number(promo.min_nominal)) {
-          requiredFreeItems[promo.free_menu_id] = (requiredFreeItems[promo.free_menu_id] || 0) + 1;
-        }
       }
-    });
+    }
     const currentAutoFreeItems = cart.filter((item) => item.is_auto_free);
     const currentAutoMap = {};
     currentAutoFreeItems.forEach((item) => {
@@ -167,13 +175,15 @@ function POS() {
   }, [cart, promos, menu]);
   const fetchData = async () => {
     try {
-      const [menuRes, profileRes, promoRes, recipesRes, ingredientsRes, addonsRes] = await Promise.all([
+      const [menuRes, profileRes, promoRes, recipesRes, ingredientsRes, addonsRes, settingsRes, paymentMethodsRes] = await Promise.all([
         supabase.from('menu').select('*'),
         supabase.from('store_profile').select('*').single(),
         supabase.from('promotions').select('*'),
         supabase.from('recipes').select('*'),
         supabase.from('ingredients').select('*'),
-        supabase.from('menu_addons').select('*')
+        supabase.from('menu_addons').select('*'),
+        supabase.from('settings').select('*'),
+        supabase.from('payment_methods').select('*').eq('is_active', true)
       ]);
 
       if (menuRes.error) throw menuRes.error;
@@ -248,6 +258,19 @@ function POS() {
       if (!promoRes.error && promoRes.data) {
         setPromos(promoRes.data);
       }
+      if (!settingsRes.error && settingsRes.data) {
+        const ppnSetting = settingsRes.data.find(s => s.setting_key === 'PPN');
+        if (ppnSetting && ppnSetting.is_active) {
+          setPpnRate(Number(ppnSetting.setting_value) / 100);
+        } else {
+          setPpnRate(0);
+        }
+      }
+      if (!paymentMethodsRes.error && paymentMethodsRes.data) {
+        setPaymentMethodsList(paymentMethodsRes.data);
+      } else {
+        setPaymentMethodsList([{ id: 1, name: 'Cash' }]);
+      }
     } catch (err) {
       console.error("Error fetching data", err);
     }
@@ -258,6 +281,7 @@ function POS() {
     setDrinkType("Ice");
     setSugarLevel("Normal");
     setSelectedAddons([]);
+    setItemNote("");
     setShowOptions(true);
   };
   const getCartIngredientUsage = () => {
@@ -378,11 +402,12 @@ function POS() {
       drink_type: selectedMenu.category === "Coffee" || selectedMenu.category === "Non Coffee" ? drinkType : null,
       sugar_level: selectedMenu.category === "Coffee" || selectedMenu.category === "Non Coffee" ? sugarLevel : null,
       addons: selectedAddons,
+      note: itemNote.trim(),
       subtotal,
       maxQty: getMaxAllowedQty()
     };
     const existingIndex = cart.findIndex(
-      (item) => item.menu_id === newItem.menu_id && item.drink_type === newItem.drink_type && item.sugar_level === newItem.sugar_level && JSON.stringify(item.addons) === JSON.stringify(newItem.addons)
+      (item) => item.menu_id === newItem.menu_id && item.drink_type === newItem.drink_type && item.sugar_level === newItem.sugar_level && JSON.stringify(item.addons) === JSON.stringify(newItem.addons) && (item.note || "") === newItem.note
     );
     if (existingIndex >= 0) {
       const newCart = [...cart];
@@ -417,73 +442,70 @@ function POS() {
   const calculateTotals = () => {
     let subtotal = cart.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
     let discount = 0;
-    const activePromos = promos.filter(isPromoValid);
-    let maxDiscount = 0;
-    activePromos.forEach((promo) => {
-      let currentDiscount = 0;
-      if (promo.type === "DISCOUNT") {
-        currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
-      } else if (promo.type === "MIN_BUY_DISCOUNT") {
-        let eligibleQty = 0;
-        if (promo.min_buy_menu_id) {
-          const buyItems = cart.filter(i => i.menu_id === Number(promo.min_buy_menu_id));
-          eligibleQty = buyItems.reduce((sum, item) => sum + item.qty, 0);
-        } else {
-          eligibleQty = cart.reduce((sum, item) => sum + item.qty, 0);
-        }
-        
-        if (eligibleQty >= Number(promo.min_buy_qty)) {
-          const timesApplied = Math.floor(eligibleQty / Number(promo.min_buy_qty));
+    
+    if (selectedPromoId) {
+      const promo = promos.find(p => p.promo_id.toString() === selectedPromoId && isPromoValid(p));
+      if (promo) {
+        if (promo.type === "DISCOUNT") {
+          discount = subtotal * (Number(promo.discount_percent) / 100);
+        } else if (promo.type === "MIN_BUY_DISCOUNT") {
+          let eligibleQty = 0;
+          if (promo.min_buy_menu_id) {
+            const buyItems = cart.filter(i => i.menu_id === Number(promo.min_buy_menu_id));
+            eligibleQty = buyItems.reduce((sum, item) => sum + item.qty, 0);
+          } else {
+            eligibleQty = cart.reduce((sum, item) => sum + item.qty, 0);
+          }
           
-          if (promo.free_menu_id) {
-            const discountItems = cart.filter(i => i.menu_id === Number(promo.free_menu_id));
-            const availableQty = discountItems.reduce((sum, item) => sum + item.qty, 0);
+          if (eligibleQty >= Number(promo.min_buy_qty)) {
+            const timesApplied = Math.floor(eligibleQty / Number(promo.min_buy_qty));
             
-            if (availableQty > 0) {
-              const maxDiscountQty = promo.free_qty ? Number(promo.free_qty) * timesApplied : availableQty;
-              const actualDiscountQty = Math.min(availableQty, maxDiscountQty);
+            if (promo.free_menu_id) {
+              const discountItems = cart.filter(i => i.menu_id === Number(promo.free_menu_id));
+              const availableQty = discountItems.reduce((sum, item) => sum + item.qty, 0);
               
-              const discountItemsSubtotal = discountItems.reduce((sum, item) => sum + item.subtotal, 0);
-              const discountableSubtotal = (discountItemsSubtotal / availableQty) * actualDiscountQty;
-              
+              if (availableQty > 0) {
+                const maxDiscountQty = promo.free_qty ? Number(promo.free_qty) * timesApplied : availableQty;
+                const actualDiscountQty = Math.min(availableQty, maxDiscountQty);
+                
+                const discountItemsSubtotal = discountItems.reduce((sum, item) => sum + item.subtotal, 0);
+                const discountableSubtotal = (discountItemsSubtotal / availableQty) * actualDiscountQty;
+                
+                if (promo.discount_amount) {
+                  discount = Number(promo.discount_amount) * (promo.free_qty ? actualDiscountQty : timesApplied);
+                } else if (promo.discount_percent) {
+                  discount = discountableSubtotal * (Number(promo.discount_percent) / 100);
+                }
+              }
+            } else {
               if (promo.discount_amount) {
-                currentDiscount = Number(promo.discount_amount) * (promo.free_qty ? actualDiscountQty : timesApplied);
+                discount = Number(promo.discount_amount) * timesApplied;
               } else if (promo.discount_percent) {
-                currentDiscount = discountableSubtotal * (Number(promo.discount_percent) / 100);
+                discount = subtotal * (Number(promo.discount_percent) / 100);
               }
             }
-          } else {
+          }
+        } else if (promo.type === "MIN_NOMINAL_FREE") {
+          if (subtotal >= Number(promo.min_nominal)) {
             if (promo.discount_amount) {
-              currentDiscount = Number(promo.discount_amount) * timesApplied;
+              discount = Number(promo.discount_amount);
             } else if (promo.discount_percent) {
-              currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
+              discount = subtotal * (Number(promo.discount_percent) / 100);
             }
           }
         }
-      } else if (promo.type === "MIN_NOMINAL_FREE") {
-        if (subtotal >= Number(promo.min_nominal)) {
-          if (promo.discount_amount) {
-            currentDiscount = Number(promo.discount_amount);
-          } else if (promo.discount_percent) {
-            currentDiscount = subtotal * (Number(promo.discount_percent) / 100);
-          }
-        }
-      } else if (promo.type === "MIN_BUY_FREE") {
       }
-      if (currentDiscount > maxDiscount) {
-        maxDiscount = currentDiscount;
-      }
-    });
-    discount = maxDiscount;
-    const tax = Math.round((subtotal - discount) * 0.11);
+    }
+
+    const tax = Math.round((subtotal - discount) * ppnRate);
     const total = subtotal - discount + tax;
     return { subtotal, discount, tax, total };
   };
   const totals = calculateTotals();
   const totalCart = totals.total;
   const handleCheckout = async () => {
-    if (!tableNo || !customerName) {
-      alert("Please enter Table No and Customer Name");
+    if (!tableNo) {
+      alert("Please select Order Type");
       return;
     }
     if (cart.length === 0) {
@@ -498,11 +520,13 @@ function POS() {
     setIsProcessing(true);
     try {
       // 1. Create transaction record
+      const actualCustomerName = customerName || "Guest";
+      const finalCustomerName = transactionNote ? `${actualCustomerName} - Note: ${transactionNote}` : actualCustomerName;
       const { data: transaction, error: txError } = await supabase
         .from('transactions')
         .insert([{
           table_no: tableNo,
-          customer_name: customerName,
+          customer_name: finalCustomerName,
           payment_method: paymentMethod,
           subtotal: totals.subtotal,
           tax: totals.tax,
@@ -521,7 +545,7 @@ function POS() {
       const txItems = cart.map(item => ({
         transaction_id: transaction.transaction_id,
         menu_id: item.menu_id,
-        menu_name: item.menu_name,
+        menu_name: item.note ? `${item.menu_name} (Note: ${item.note})` : item.menu_name,
         qty: item.qty,
         price: item.price,
         subtotal: item.subtotal,
@@ -591,10 +615,29 @@ function POS() {
           .eq('bill_id', openBillId);
       }
 
+      // Calculate Daily Running Number for Invoice
+      const todayStart = moment(transaction.date).tz(TIMEZONE).startOf('day').utc().toISOString();
+      const todayEnd = moment(transaction.date).tz(TIMEZONE).endOf('day').utc().toISOString();
+      const { data: todayTxns } = await supabase
+        .from('transactions')
+        .select('transaction_id')
+        .gte('date', todayStart)
+        .lte('date', todayEnd)
+        .order('transaction_id', { ascending: true });
+        
+      let dayIndex = 0;
+      if (todayTxns) {
+        dayIndex = todayTxns.findIndex(t => t.transaction_id === transaction.transaction_id);
+      }
+      
+      const datePart = moment(transaction.date).tz(TIMEZONE).format('YYMMDD');
+      const seqPart = String(Math.max(0, dayIndex) + 1).padStart(3, '0');
+      const invoiceNo = `${datePart}${seqPart}`;
+
       const receiptContent = `
         <html>
           <head>
-            <title>Receipt #${transaction.transaction_id}</title>
+            <title>Invoice #${invoiceNo}</title>
             <style>
               body { font-family: monospace; width: 300px; margin: 0 auto; padding: 20px; }
               .header { text-align: center; margin-bottom: 20px; }
@@ -618,9 +661,9 @@ function POS() {
               <p>${storeProfile?.address || "Address"}</p>
               <p>${storeProfile?.phone || "Phone"}</p>
               <div class="divider"></div>
-              <p>Receipt #${transaction.transaction_id}</p>
+              <p>Invoice #${invoiceNo}</p>
               <p>${moment().tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</p>
-              <p>Customer: ${customerName} | Table: ${tableNo}</p>
+              <p>Customer: ${customerName} | Order Type: ${tableNo}</p>
             </div>
             <div class="divider"></div>
             ${cart.map((item) => `
@@ -695,7 +738,11 @@ function POS() {
       setQrisData(null);
       fetchData(); // Refresh stock
     } catch (err) {
-      alert(err.message || "Checkout failed");
+      if (err.message === "Failed to fetch" || (err.message && err.message.includes("fetch"))) {
+        alert("Checkout failed: Failed to connect to database. Please make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are correctly set in the Secrets panel.");
+      } else {
+        alert(err.message || "Checkout failed");
+      }
     } finally {
       setIsProcessing(false);
       isProcessingRef.current = false;
@@ -709,8 +756,8 @@ function POS() {
     });
   };
   const saveOpenBill = async () => {
-    if (!tableNo || !customerName) {
-      alert("Please enter Table No and Customer Name");
+    if (!tableNo) {
+      alert("Please select Order Type");
       return;
     }
     if (cart.length === 0) {
@@ -724,6 +771,8 @@ function POS() {
     
     try {
       let billId = openBillId;
+      const actualCustomerName = customerName || "Guest";
+      const finalCustomerName = transactionNote ? `${actualCustomerName} - Note: ${transactionNote}` : actualCustomerName;
       
       if (openBillId) {
         // Update existing open bill
@@ -731,7 +780,7 @@ function POS() {
           .from('open_bills')
           .update({
             table_no: tableNo,
-            customer_name: customerName,
+            customer_name: finalCustomerName,
             subtotal: totals.subtotal,
             tax: totals.tax,
             discount: totals.discount,
@@ -749,7 +798,7 @@ function POS() {
           .from('open_bills')
           .insert([{
             table_no: tableNo,
-            customer_name: customerName,
+            customer_name: finalCustomerName,
             subtotal: totals.subtotal,
             tax: totals.tax,
             discount: totals.discount,
@@ -767,7 +816,7 @@ function POS() {
       const billItems = cart.map(item => ({
         bill_id: billId,
         menu_id: item.menu_id,
-        menu_name: item.menu_name,
+        menu_name: item.note ? `${item.menu_name} (Note: ${item.note})` : item.menu_name,
         qty: item.qty,
         price: item.price,
         subtotal: item.subtotal,
@@ -787,7 +836,11 @@ function POS() {
       setCustomerName("");
       setOpenBillId(null);
     } catch (err) {
-      alert(err.message || "Failed to save open bill");
+      if (err.message === "Failed to fetch" || (err.message && err.message.includes("fetch"))) {
+        alert("Failed to save open bill: Failed to connect to database. Please make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are correctly set in the Secrets panel.");
+      } else {
+        alert(err.message || "Failed to save open bill");
+      }
     } finally {
       setIsProcessing(false);
       isProcessingRef.current = false;
@@ -860,8 +913,10 @@ function POS() {
       onClick={() => !outOfStock && handleMenuClick(item)}
       className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col ${outOfStock ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-md transition-shadow"}`}
     >
-                <div className="h-40 bg-gray-200 relative">
-                  {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>}
+                <div className="h-40 bg-blue-50 relative flex items-center justify-center">
+                  <span className="text-blue-500 font-bold text-6xl opacity-30 select-none">
+                    {item.name ? item.name.charAt(0).toUpperCase() : '?'}
+                  </span>
                   <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded-lg text-xs font-bold text-gray-800">
                     {item.category}
                   </div>
@@ -904,6 +959,7 @@ function POS() {
                     <div className="text-xs text-gray-500 mt-1 space-y-0.5">
                       {item.drink_type && <p>{item.drink_type} • {item.sugar_level} Sugar</p>}
                       {item.addons.map((a, i) => <p key={i}>+ {a.name} (Rp {a.price})</p>)}
+                      {item.note && <p className="italic text-gray-400">Note: {item.note}</p>}
                     </div>
                   </div>
                   <p className="font-bold text-blue-600">Rp {Number(item.subtotal || 0).toLocaleString("id-ID")}</p>
@@ -932,19 +988,19 @@ function POS() {
           <div className="space-y-3 mb-4">
             <div className="flex space-x-3">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Table No *</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Order Type *</label>
                 <select
     value={tableNo}
     onChange={(e) => setTableNo(e.target.value)}
     className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
   >
-                  <option value="">Select Table</option>
-                  {[...Array(10)].map((_, i) => <option key={i + 1} value={i + 1}>Table {i + 1}</option>)}
+                  <option value="">Select Type</option>
+                  <option value="Dine In">Dine In</option>
                   <option value="Takeaway">Takeaway</option>
                 </select>
               </div>
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Customer *</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Customer (Optional)</label>
                 <input
     type="text"
     value={customerName}
@@ -955,6 +1011,20 @@ function POS() {
               </div>
             </div>
             
+            <div className="mb-3">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Promo (Optional)</label>
+              <select
+                value={selectedPromoId}
+                onChange={(e) => setSelectedPromoId(e.target.value)}
+                className="w-full p-2 border border-blue-200 bg-blue-50 text-blue-800 rounded-lg outline-none focus:border-blue-500 font-medium"
+              >
+                <option value="">No Promo</option>
+                {promos.filter(isPromoValid).map(p => (
+                  <option key={p.promo_id} value={p.promo_id.toString()}>{p.title}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="flex justify-between items-center py-1">
               <span className="text-gray-500 text-sm">Subtotal</span>
               <span className="font-medium text-gray-800">Rp {Number(totals.subtotal || 0).toLocaleString("id-ID")}</span>
@@ -1102,6 +1172,20 @@ function POS() {
   })}
                   </div>
                 </div>}
+
+              {
+    /* Notes */
+  }
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Special Request (Optional)</label>
+                <textarea
+                  value={itemNote}
+                  onChange={(e) => setItemNote(e.target.value)}
+                  placeholder="E.g., less ice, extra hot..."
+                  className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  rows={2}
+                ></textarea>
+              </div>
             </div>
 
             <div className="p-4 border-t bg-gray-50">
@@ -1134,20 +1218,31 @@ function POS() {
               </div>
 
               <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Transaction Notes/Remarks (Optional)</label>
+                <textarea
+                  value={transactionNote}
+                  onChange={(e) => setTransactionNote(e.target.value)}
+                  placeholder="E.g., Customer requested split bill, special occasion..."
+                  className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  rows={2}
+                ></textarea>
+              </div>
+
+              <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3">Payment Method</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {["Cash", "QRIS", "Bank Transfer", "Debit / Credit Card"].map((method) => <button
-    key={method}
+                  {paymentMethodsList.map((pmData) => <button
+    key={pmData.id}
     onClick={() => {
-      setPaymentMethod(method);
+      setPaymentMethod(pmData.name);
       setQrisData(null);
     }}
     className={clsx(
       "py-3 px-4 rounded-xl font-medium border-2 transition-all text-left",
-      paymentMethod === method ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
+      paymentMethod === pmData.name ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
     )}
   >
-                      {method}
+                      {pmData.name}
                     </button>)}
                 </div>
               </div>
@@ -1173,21 +1268,13 @@ function POS() {
                 </div>}
 
               {paymentMethod === "QRIS" && <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
-                  {!qrisData ? <button
-    onClick={generateQris}
-    className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors"
-  >
-                      Generate QRIS
-                    </button> : <div className="text-center">
-                      <div className="w-48 h-48 bg-white border-4 border-blue-500 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                        <span className="text-gray-400 font-bold">QR CODE PLACEHOLDER</span>
-                      </div>
-                      <p className="text-sm text-gray-500 font-mono break-all max-w-xs mx-auto mb-4">{qrisData.qr_string}</p>
-                      <div className="inline-flex items-center space-x-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-bold text-sm">
-                        <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-                        <span>Waiting for payment...</span>
-                      </div>
-                    </div>}
+                  <div className="text-center">
+                    <p className="text-gray-600 font-medium mb-4">Please ask customer to scan your store's QRIS.</p>
+                    <div className="inline-flex items-center space-x-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-bold text-sm">
+                      <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+                      <span>Confirm payment when received...</span>
+                    </div>
+                  </div>
                 </div>}
             </div>
 

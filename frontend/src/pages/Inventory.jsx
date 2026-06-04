@@ -52,7 +52,11 @@ function Inventory() {
       setSelectedItem(null);
       fetchInventory();
     } catch (err) {
-      alert("Error saving ingredient: " + err.message);
+      if (err.message === "Failed to fetch" || (err.message && err.message.includes("fetch"))) {
+        alert("Error saving ingredient: Failed to connect to database. Please make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are correctly set.");
+      } else {
+        alert("Error saving ingredient: " + err.message);
+      }
     }
   };
   const handleDelete = async (id) => {

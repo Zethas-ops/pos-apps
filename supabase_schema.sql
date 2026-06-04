@@ -139,6 +139,26 @@ INSERT INTO store_profile (id, store_name, address, phone)
 VALUES (1, 'My Coffee Shop', '123 Coffee Street', '081234567890')
 ON CONFLICT (id) DO NOTHING;
 
+-- 12. Create Payment Methods Table
+CREATE TABLE payment_methods (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Insert default payment methods
+INSERT INTO payment_methods (name) VALUES ('Cash'), ('QRIS'), ('Bank Transfer'), ('EDC');
+
+-- 13. Create General Settings Table
+CREATE TABLE settings (
+  setting_key VARCHAR(50) PRIMARY KEY,
+  setting_value VARCHAR(255) NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Insert default settings
+INSERT INTO settings (setting_key, setting_value, is_active) VALUES ('PPN', '11', TRUE);
+
 -- RLS Policies (Optional but recommended for production)
 -- For a local/internal POS, you might just want to allow all authenticated users to read/write.
 -- To keep it simple for this migration, we will allow anon/authenticated access, 

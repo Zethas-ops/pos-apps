@@ -13,6 +13,7 @@ import History from "./pages/History";
 import Promo from "./pages/Promo";
 import Settings from "./pages/Settings";
 import RoleManagement from "./pages/RoleManagement";
+import PaymentMethods from "./pages/PaymentMethods";
 import Layout from "./components/Layout";
 function PrivateRoute({ children, requirePermission }) {
   const token = localStorage.getItem("token");
@@ -43,6 +44,7 @@ function App() {
           <Route path="inventory" element={<PrivateRoute requirePermission="inventory"><Inventory /></PrivateRoute>} />
           <Route path="promo" element={<PrivateRoute requirePermission="promo"><Promo /></PrivateRoute>} />
           <Route path="roles" element={<PrivateRoute requirePermission="roles"><RoleManagement /></PrivateRoute>} />
+          <Route path="payment-methods" element={<PrivateRoute requirePermission="settings"><PaymentMethods /></PrivateRoute>} />
           <Route path="settings" element={<PrivateRoute requirePermission="settings"><Settings /></PrivateRoute>} />
         </Route>
       </Routes>

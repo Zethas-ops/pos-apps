@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { DollarSign, Calendar, Download, Clock, TrendingUp, ShoppingBag } from "lucide-react";
+import { DollarSign, Calendar, Download, Clock, TrendingUp, ShoppingBag, Package } from "lucide-react";
 import moment from "moment-timezone";
 import { supabase } from "../lib/supabase";
 
@@ -80,6 +80,17 @@ function Dashboard() {
       const filteredSales = filteredTxns.reduce((sum, t) => sum + Number(t.total_price), 0);
       const filteredOrders = filteredTxns.length;
 
+      let filteredItemsQty = 0;
+      let filteredItemsValue = 0;
+      filteredTxns.forEach(t => {
+        if (t.transaction_items) {
+          t.transaction_items.forEach(item => {
+             filteredItemsQty += Number(item.qty);
+             filteredItemsValue += Number(item.subtotal);
+          });
+        }
+      });
+
       const todayTxns = metricTxns.filter(t => t.date >= todayStart && t.date <= todayEnd);
       const weekTxns = metricTxns.filter(t => t.date >= weekStart && t.date <= weekEnd);
       const monthTxnsOnly = metricTxns.filter(t => t.date >= monthStart && t.date <= monthEnd);
@@ -92,6 +103,8 @@ function Dashboard() {
       setMetrics({
         filteredSales,
         filteredOrders,
+        filteredItemsQty,
+        filteredItemsValue,
         todaySales,
         weekSales,
         monthSales,
@@ -112,7 +125,7 @@ function Dashboard() {
       }));
 
       const trafficByHour = {};
-      todayTxns.forEach(t => {
+      filteredTxns.forEach(t => {
         // Convert UTC date to UTC+7 to group by hour correctly
         const hour = moment.utc(t.date).tz(TIMEZONE).format("HH:00");
         if (!trafficByHour[hour]) trafficByHour[hour] = { orders: 0, revenue: 0 };
@@ -310,7 +323,18 @@ function Dashboard() {
       {
     /* Metrics Cards */
   }
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
+          <div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Items Sold ({timeRangeLabel[timeRange]})</p>
+            <p className="text-2xl font-bold text-gray-900">{metrics.filteredItemsQty || 0} items</p>
+            <p className="text-xs text-gray-500 mt-1">Rp {metrics.filteredItemsValue?.toLocaleString("id-ID") || 0}</p>
+          </div>
+          <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
+            <Package size={20} />
+          </div>
+        </div>
+
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Today's Revenue</p>
@@ -445,13 +469,13 @@ function Dashboard() {
       </div>
 
       {
-    /* Today's Hourly Traffic */
+    /* Hourly Traffic */
   }
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <Clock size={18} className="text-gray-500" />
-            <h2 className="text-lg font-bold text-gray-800">Today's Hourly Traffic</h2>
+            <h2 className="text-lg font-bold text-gray-800">Hourly Traffic ({timeRangeLabel[timeRange]})</h2>
           </div>
           {peakHour && <div className="text-sm text-gray-600">
               Peak: <span className="font-bold">{peakHour.label}</span> - {peakHour.orders} orders - Rp {peakHour.revenue.toLocaleString("id-ID")}
