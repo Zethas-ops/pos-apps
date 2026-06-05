@@ -325,7 +325,7 @@ function Dashboard() {
       {
     /* Metrics Cards */
   }
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
@@ -458,7 +458,7 @@ function Dashboard() {
                 </div>
                 <button
     onClick={handleApplyFilter}
-    className="bg-blue-50 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
+    className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
   >
                   Apply
                 </button>
