@@ -188,7 +188,7 @@ function History() {
   });
   return <div className="p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">Transaction History</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Transaction History</h1>
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
           <div className="relative w-full sm:w-auto">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -196,7 +196,7 @@ function History() {
     type="date"
     value={dateFilter}
     onChange={(e) => setDateFilter(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
   />
           </div>
           <div className="relative w-full sm:w-auto">
@@ -206,40 +206,40 @@ function History() {
     placeholder="Search by name or ID..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
+    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
   />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="p-4 font-bold text-gray-600">ID</th>
-              <th className="p-4 font-bold text-gray-600">Date</th>
-              <th className="p-4 font-bold text-gray-600">Customer</th>
-              <th className="p-4 font-bold text-gray-600">Table</th>
-              <th className="p-4 font-bold text-gray-600">Total</th>
-              <th className="p-4 font-bold text-gray-600">Payment</th>
-              <th className="p-4 font-bold text-gray-600 text-right">Actions</th>
+            <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">ID</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Date</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Customer</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Table</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Total</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Payment</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredTransactions.map((t) => <React.Fragment key={t.transaction_id}>
-                <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => setExpandedId(expandedId === t.transaction_id ? null : t.transaction_id)}>
-                  <td className="p-4 font-medium text-gray-800">
+                <tr className="border-b border-gray-100 hover:bg-gray-50 dark:bg-gray-900 transition-colors cursor-pointer" onClick={() => setExpandedId(expandedId === t.transaction_id ? null : t.transaction_id)}>
+                  <td className="p-4 font-medium text-gray-800 dark:text-gray-100">
                     <div className="flex items-center space-x-2">
                       {expandedId === t.transaction_id ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                       <span>#{t.invoice_no}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-gray-600">{moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</td>
-                  <td className="p-4 font-medium text-gray-800">{t.customer_name}</td>
-                  <td className="p-4 text-gray-600">{t.table_no}</td>
-                  <td className="p-4 font-bold text-blue-600">Rp {Number(t.total_price || 0).toLocaleString("id-ID")}</td>
-                  <td className="p-4">
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+                  <td className="p-4 text-gray-600 dark:text-gray-300">{moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</td>
+                  <td className="p-4 font-medium text-gray-800 dark:text-gray-100">{t.customer_name}</td>
+                  <td className="p-4 text-gray-600 dark:text-gray-300">{t.table_no}</td>
+                  <td className="p-4 font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">Rp {Number(t.total_price || 0).toLocaleString("id-ID")}</td>
+                  <td className="p-4 max-w-[200px]">
+                    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-sm font-medium inline-block break-words w-full">
                       {t.payment_method}
                     </span>
                   </td>
@@ -249,52 +249,52 @@ function History() {
       e.stopPropagation();
       handleReprint(t);
     }}
-    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center"
+    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:bg-blue-900/30 rounded-lg transition-colors inline-flex items-center"
     title="Reprint Receipt"
   >
                       <Printer size={20} />
                     </button>
                   </td>
                 </tr>
-                {expandedId === t.transaction_id && <tr className="bg-gray-50 border-b border-gray-100">
+                {expandedId === t.transaction_id && <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-100">
                     <td colSpan={7} className="p-6">
-                      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                        <h4 className="font-semibold text-gray-800 mb-4 border-b pb-2">Order Details</h4>
+                      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2">Order Details</h4>
                         <div className="space-y-3">
                           {t.items.map((item, idx) => <div key={idx} className="flex justify-between items-start">
                               <div>
-                                <p className="font-medium text-gray-800">
+                                <p className="font-medium text-gray-800 dark:text-gray-100">
                                   {item.qty}x {item.menu_name}
                                   {item.is_auto_free ? <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">FREE</span> : ""}
                                 </p>
-                                {(item.drink_type || item.sugar_level) && <p className="text-sm text-gray-500">
+                                {(item.drink_type || item.sugar_level) && <p className="text-sm text-gray-500 dark:text-gray-400">
                                     {item.drink_type && <span>{item.drink_type}</span>}
                                     {item.drink_type && item.sugar_level && <span> • </span>}
                                     {item.sugar_level && <span>{item.sugar_level} Sugar</span>}
                                   </p>}
-                                {Array.isArray(item.addons) && item.addons.length > 0 && <p className="text-sm text-gray-500">
+                                {Array.isArray(item.addons) && item.addons.length > 0 && <p className="text-sm text-gray-500 dark:text-gray-400">
                                     + {item.addons.map((a) => a.name).join(", ")}
                                   </p>}
                               </div>
-                              <p className="font-medium text-gray-800">Rp {Number(item.subtotal || 0).toLocaleString("id-ID")}</p>
+                              <p className="font-medium text-gray-800 dark:text-gray-100">Rp {Number(item.subtotal || 0).toLocaleString("id-ID")}</p>
                             </div>)}
                         </div>
                         <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end space-x-8 text-sm">
                           <div className="text-right">
-                            <p className="text-gray-500 mb-1">Subtotal</p>
-                            <p className="font-medium text-gray-800">Rp {Number(t.subtotal || 0).toLocaleString("id-ID")}</p>
+                            <p className="text-gray-500 dark:text-gray-400 mb-1">Subtotal</p>
+                            <p className="font-medium text-gray-800 dark:text-gray-100">Rp {Number(t.subtotal || 0).toLocaleString("id-ID")}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-gray-500 mb-1">Tax</p>
-                            <p className="font-medium text-gray-800">Rp {Number(t.tax || 0).toLocaleString("id-ID")}</p>
+                            <p className="text-gray-500 dark:text-gray-400 mb-1">Tax</p>
+                            <p className="font-medium text-gray-800 dark:text-gray-100">Rp {Number(t.tax || 0).toLocaleString("id-ID")}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-gray-500 mb-1">Discount</p>
+                            <p className="text-gray-500 dark:text-gray-400 mb-1">Discount</p>
                             <p className="font-medium text-red-600">-Rp {Number(t.discount || 0).toLocaleString("id-ID")}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-gray-500 mb-1">Total</p>
-                            <p className="font-bold text-blue-600 text-lg">Rp {Number(t.total_price || 0).toLocaleString("id-ID")}</p>
+                            <p className="text-gray-500 dark:text-gray-400 mb-1">Total</p>
+                            <p className="font-bold text-blue-600 dark:text-blue-400 text-lg">Rp {Number(t.total_price || 0).toLocaleString("id-ID")}</p>
                           </div>
                         </div>
                       </div>
@@ -302,7 +302,7 @@ function History() {
                   </tr>}
               </React.Fragment>)}
             {filteredTransactions.length === 0 && <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-500">
+                <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400">
                   No transactions found.
                 </td>
               </tr>}
