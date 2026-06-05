@@ -243,8 +243,24 @@ function Dashboard() {
       }
 
       // Flatten the data for CSV
+      const sortedData = [...data].sort((a,b) => a.transaction_id - b.transaction_id);
+      const groups = {};
+      sortedData.forEach(t => {
+        const gDate = moment.utc(t.date).tz(TIMEZONE).format('YYYY-MM-DD');
+        if (!groups[gDate]) groups[gDate] = [];
+        groups[gDate].push(t);
+      });
+      
+      const dataWithInvoice = data.map(t => {
+        const gDate = moment.utc(t.date).tz(TIMEZONE).format('YYYY-MM-DD');
+        const index = (groups[gDate] || []).findIndex(x => x.transaction_id === t.transaction_id);
+        const datePart = moment.utc(t.date).tz(TIMEZONE).format('YYMMDD');
+        const seqPart = String(Math.max(0, index) + 1).padStart(3, '0');
+        return { ...t, invoice_no: `${datePart}${seqPart}` };
+      });
+
       const csvData = [];
-      data.forEach(t => {
+      dataWithInvoice.forEach(t => {
         const localDate = moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss");
         if (t.transaction_items && t.transaction_items.length > 0) {
           t.transaction_items.forEach(item => {
@@ -262,7 +278,7 @@ function Dashboard() {
             const addonsString = Array.isArray(parsedAddons) ? parsedAddons.map(a => a.name).join(', ') : '';
 
             csvData.push({
-              transaction_id: t.transaction_id,
+              invoice_no: t.invoice_no,
               date: localDate,
               table_no: t.table_no || '',
               customer_name: t.customer_name || '',
@@ -277,7 +293,7 @@ function Dashboard() {
           });
         } else {
           csvData.push({
-            transaction_id: t.transaction_id,
+            invoice_no: t.invoice_no,
             date: localDate,
             table_no: t.table_no || '',
             customer_name: t.customer_name || '',
@@ -325,7 +341,7 @@ function Dashboard() {
       {
     /* Metrics Cards */
   }
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0">
@@ -458,7 +474,7 @@ function Dashboard() {
                 </div>
                 <button
     onClick={handleApplyFilter}
-    className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
+    className="bg-blue-50 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
   >
                   Apply
                 </button>

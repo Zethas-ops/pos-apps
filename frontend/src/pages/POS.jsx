@@ -753,6 +753,7 @@ function POS() {
       setTimeout(() => {
         document.body.removeChild(iframe);
       }, 1000);
+      alert("Payment successful!");
       setCart([]);
       setTableNo("");
       setCustomerName("");
