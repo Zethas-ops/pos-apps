@@ -141,8 +141,17 @@ function Dashboard() {
       const pmCount = {};
       filteredTxns.forEach(t => {
         const pm = t.payment_method;
-        if (!pmCount[pm]) pmCount[pm] = 0;
-        pmCount[pm] += 1;
+        if (pm && pm.includes(' (Rp ')) {
+          const parts = pm.split(', ');
+          parts.forEach(part => {
+             const method = part.split(' (Rp ')[0].trim();
+             if (!pmCount[method]) pmCount[method] = 0;
+             pmCount[method] += 1;
+          });
+        } else {
+          if (!pmCount[pm]) pmCount[pm] = 0;
+          pmCount[pm] += 1;
+        }
       });
       const paymentMethods = Object.keys(pmCount).map(pm => ({
         name: pm,
