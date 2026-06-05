@@ -196,7 +196,7 @@ function History() {
     type="date"
     value={dateFilter}
     onChange={(e) => setDateFilter(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full pl-10 pr-4 py-2 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
   />
           </div>
           <div className="relative w-full sm:w-auto">
@@ -206,7 +206,7 @@ function History() {
     placeholder="Search by name or ID..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
+    className="w-full pl-10 pr-4 py-2 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
   />
           </div>
         </div>
@@ -215,7 +215,7 @@ function History() {
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+            <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">ID</th>
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Date</th>
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Customer</th>

@@ -84,7 +84,7 @@ function Settings() {
     }
   };
   return <div className="p-8 space-y-8 max-w-4xl">
-      <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
+      <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Settings</h1>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b bg-gray-50">

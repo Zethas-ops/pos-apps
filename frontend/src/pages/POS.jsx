@@ -920,7 +920,7 @@ function POS() {
     placeholder="Search menu..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
+    className="w-full pl-10 pr-4 py-2 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
   />
           </div>
         </div>
@@ -994,7 +994,7 @@ function POS() {
                     <button onClick={() => updateCartQty(index, -1)} disabled={item.is_auto_free} className="p-1 hover:bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 disabled:opacity-50">
                       <Minus size={16} />
                     </button>
-                    <span className="font-bold w-6 text-center">{item.qty}</span>
+                    <span className="font-bold w-6 text-center dark:text-gray-300">{item.qty}</span>
                     <button onClick={() => updateCartQty(index, 1)} disabled={item.is_auto_free} className="p-1 hover:bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 disabled:opacity-50">
                       <Plus size={16} />
                     </button>
@@ -1017,7 +1017,7 @@ function POS() {
                 <select
     value={tableNo}
     onChange={(e) => setTableNo(e.target.value)}
-    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    className="w-full p-2 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
   >
                   <option value="">Select Type</option>
                   <option value="Dine In">Dine In</option>
@@ -1031,7 +1031,7 @@ function POS() {
     value={customerName}
     onChange={(e) => setCustomerName(e.target.value)}
     placeholder="Name"
-    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    className="w-full p-2 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
   />
               </div>
             </div>
@@ -1041,7 +1041,7 @@ function POS() {
               <select
                 value={selectedPromoId}
                 onChange={(e) => setSelectedPromoId(e.target.value)}
-                className="w-full p-2 border border-blue-200 bg-blue-50 dark:bg-blue-900/30 text-blue-800 rounded-lg outline-none focus:border-blue-500 font-medium"
+                className="w-full p-2 dark:text-gray-500 border border-blue-200 bg-blue-50 dark:bg-blue-900/30 text-blue-800 rounded-lg outline-none focus:border-blue-500 font-medium"
               >
                 <option value="">No Promo</option>
                 {promos.filter(isPromoValid).map(p => (
@@ -1110,7 +1110,7 @@ function POS() {
   >
                     <Minus size={20} />
                   </button>
-                  <span className="text-2xl font-bold w-12 text-center">{qty}</span>
+                  <span className="text-2xl font-bold w-12 text-center dark:text-gray-300">{qty}</span>
                   <button
     onClick={() => setQty(Math.min(getMaxAllowedQty(), qty + 1))}
     disabled={qty >= getMaxAllowedQty()}
@@ -1186,7 +1186,7 @@ function POS() {
                           <div className="flex items-center space-x-3">
                             <div className={clsx(
       "w-6 h-6 rounded border flex items-center justify-center",
-      isSelected ? "bg-blue-50 dark:bg-blue-900/300 border-blue-500 text-white" : "border-gray-300 dark:border-gray-600"
+      isSelected ? "bg-blue-500 dark:bg-blue-900/300 border-blue-500 text-white" : "border-gray-300 dark:border-gray-600"
     )}>
                               {isSelected && <Check size={16} />}
                             </div>
@@ -1207,7 +1207,7 @@ function POS() {
                   value={itemNote}
                   onChange={(e) => setItemNote(e.target.value)}
                   placeholder="E.g., less ice, extra hot..."
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  className="w-full p-3 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                   rows={2}
                 ></textarea>
               </div>
@@ -1248,7 +1248,7 @@ function POS() {
                   value={transactionNote}
                   onChange={(e) => setTransactionNote(e.target.value)}
                   placeholder="E.g., Customer requested split bill, special occasion..."
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  className="w-full p-3 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                   rows={2}
                 ></textarea>
               </div>
@@ -1302,7 +1302,7 @@ function POS() {
                         newSplit[idx].method = e.target.value;
                         setSplitPayments(newSplit);
                       }}
-                      className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500"
+                      className="flex-1 p-3 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500"
                     >
                       {paymentMethodsList.map(pm => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
                     </select>
@@ -1315,7 +1315,7 @@ function POS() {
                         setSplitPayments(newSplit);
                       }}
                       placeholder="Amount"
-                      className="w-32 p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 text-right font-medium"
+                      className="w-32 p-3 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 text-right font-medium"
                     />
                     <button
                       onClick={() => {
@@ -1346,7 +1346,7 @@ function POS() {
     type="number"
     value={cashAmount}
     onChange={(e) => setCashAmount(e.target.value)}
-    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold"
+    className="w-full pl-12 pr-4 py-3 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold"
     placeholder="0"
   />
                     </div>
@@ -1357,15 +1357,7 @@ function POS() {
                     </div>}
                 </div>}
 
-              {paymentMethod === "QRIS" && <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900">
-                  <div className="text-center">
-                    <p className="text-gray-600 dark:text-gray-300 font-medium mb-4">Please ask customer to scan your store's QRIS.</p>
-                    <div className="inline-flex items-center space-x-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-bold text-sm">
-                      <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-                      <span>Confirm payment when received...</span>
-                    </div>
-                  </div>
-                </div>}
+              
             </div>
 
             <div className="p-4 border-t bg-gray-50 dark:bg-gray-900">

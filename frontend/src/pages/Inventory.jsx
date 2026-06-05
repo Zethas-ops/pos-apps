@@ -93,7 +93,7 @@ function Inventory() {
   );
   return <div className="p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">Inventory Management</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Inventory Management</h1>
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
           <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -102,7 +102,7 @@ function Inventory() {
     placeholder="Search ingredients..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
+    className="w-full pl-10 pr-4 py-2 dark:text-gray-300  rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
   />
           </div>
           <button
@@ -120,34 +120,34 @@ function Inventory() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="p-4 font-bold text-gray-600">ID</th>
-              <th className="p-4 font-bold text-gray-600">Ingredient Name</th>
-              <th className="p-4 font-bold text-gray-600">Current Stock</th>
-              <th className="p-4 font-bold text-gray-600">Unit</th>
-              <th className="p-4 font-bold text-gray-600 text-right">Actions</th>
+            <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">ID</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Ingredient Name</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Current Stock</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Unit</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredInventory.map((item) => <tr key={item.ingredient_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                <td className="p-4 font-medium text-gray-800">#{item.ingredient_id}</td>
-                <td className="p-4 font-medium text-gray-800">{item.ingredient_name}</td>
+            {filteredInventory.map((item) => <tr key={item.ingredient_id} className="border-b border-gray-100 hover:bg-gray-50 dark:bg-gray-900 transition-colors">
+                <td className="p-4 font-medium text-gray-800 dark:text-gray-300">#{item.ingredient_id}</td>
+                <td className="p-4 font-medium text-gray-800 dark:text-gray-300">{item.ingredient_name}</td>
                 <td className="p-4">
                   <span className={`font-bold ${item.current_stock <= 10 ? "text-red-600" : "text-green-600"}`}>
                     {Number(item.current_stock || 0).toLocaleString()}
                   </span>
                 </td>
-                <td className="p-4 text-gray-600">{item.unit}</td>
+                <td className="p-4 text-gray-600 dark:text-gray-300">{item.unit}</td>
                 <td className="p-4 text-right space-x-2">
                   <button
     onClick={() => {
       setSelectedItem(item);
       setShowAdjustModal(true);
     }}
-    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors inline-flex items-center"
+    className="p-2 text-green-600 hover:bg-green-50 dark:bg-blue-900/30 rounded-lg transition-colors inline-flex items-center"
     title="Adjust Stock"
   >
                     <Settings2 size={20} />
@@ -163,14 +163,14 @@ function Inventory() {
       });
       setShowModal(true);
     }}
-    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center"
+    className="p-2 text-blue-600 hover:bg-blue-50 dark:bg-blue-900/30 rounded-lg transition-colors inline-flex items-center"
     title="Edit Detail"
   >
                     <Edit2 size={20} />
                   </button>
                   <button
     onClick={() => handleDelete(item.ingredient_id)}
-    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center"
+    className="p-2 text-red-600 hover:bg-red-50 dark:bg-blue-900/30 rounded-lg transition-colors inline-flex items-center"
     title="Delete"
   >
                     <Trash2 size={20} />

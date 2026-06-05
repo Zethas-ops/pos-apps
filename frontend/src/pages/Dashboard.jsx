@@ -341,10 +341,10 @@ function Dashboard() {
     );
   };
   const peakHour = getPeakHour();
-  if (loading && !metrics.todaySales) return <div className="p-8">Loading dashboard...</div>;
-  return <div className="p-8 space-y-6 bg-gray-50 min-h-screen">
+  if (loading && !metrics.todaySales) return <div className="p-8 dark:text-gray-300">Loading dashboard...</div>;
+  return <div className="p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
       </div>
 
       {

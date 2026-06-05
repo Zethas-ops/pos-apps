@@ -44,7 +44,7 @@ function OpenBills() {
   );
   return <div className="p-8 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">Open Bills</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-300">Open Bills</h1>
         <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
@@ -52,7 +52,7 @@ function OpenBills() {
     placeholder="Search bills..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
+    className="w-full pl-10 pr-4 py-2 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
   />
         </div>
       </div>
@@ -60,7 +60,7 @@ function OpenBills() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredBills.map((bill) => {
     const total = bill.items.reduce((sum, i) => sum + Number(i.subtotal || 0), 0);
-    return <div key={bill.bill_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+    return <div key={bill.bill_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600 overflow-hidden flex flex-col">
               <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
                 <div>
                   <h3 className="font-bold text-gray-800 text-lg">{bill.customer_name}</h3>

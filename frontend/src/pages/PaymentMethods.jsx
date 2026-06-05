@@ -102,7 +102,7 @@ export default function PaymentMethods() {
   return (
     <div className="p-8 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Payment Methods</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Payment Methods</h1>
         <button
           onClick={() => handleOpenModal()}
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl flex items-center space-x-2 transition-colors shadow-md shadow-blue-200"
@@ -112,16 +112,16 @@ export default function PaymentMethods() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="p-4 font-bold text-gray-700">Name</th>
-              <th className="p-4 font-bold text-gray-700 text-center">Status</th>
-              <th className="p-4 font-bold text-gray-700 text-right">Actions</th>
+            <tr className="bg-gray-50 border-b border-gray-200 dark:bg-gray-700">
+              <th className="p-4 font-bold text-gray-700 dark:text-gray-300">Name</th>
+              <th className="p-4 font-bold text-gray-700 dark:text-gray-300 text-center">Status</th>
+              <th className="p-4 font-bold text-gray-700 dark:text-gray-300 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white dark:bg-gray-900">
             {methods.length === 0 ? (
               <tr>
                 <td colSpan="3" className="p-8 text-center text-gray-500">
@@ -131,7 +131,7 @@ export default function PaymentMethods() {
             ) : (
               methods.map((method) => (
                 <tr key={method.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="p-4 font-semibold text-gray-800">{method.name}</td>
+                  <td className="p-4 font-semibold text-gray-800 dark:text-gray-300">{method.name}</td>
                   <td className="p-4 text-center">
                     <button
                       onClick={() => toggleStatus(method.id, method.is_active)}
@@ -189,7 +189,7 @@ export default function PaymentMethods() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., GoPay, OVO, Cash"
-                  className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
               <div className="flex items-center space-x-3">
@@ -208,7 +208,7 @@ export default function PaymentMethods() {
                 </label>
               </div>
 
-              <div className="pt-4 border-t border-gray-100 flex space-x-3">
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-600 flex space-x-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

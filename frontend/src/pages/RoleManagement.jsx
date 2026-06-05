@@ -127,7 +127,7 @@ function RoleManagement() {
   };
   return <div className="p-8 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">Role Management</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Role Management</h1>
         <button
     onClick={() => openModal()}
     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl flex items-center justify-center space-x-2 transition-colors shadow-md shadow-blue-200 w-full sm:w-auto whitespace-nowrap"
@@ -137,23 +137,23 @@ function RoleManagement() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
             <tr>
-              <th className="p-4 font-bold text-gray-600">Name</th>
-              <th className="p-4 font-bold text-gray-600">Username</th>
-              <th className="p-4 font-bold text-gray-600">Role</th>
-              <th className="p-4 font-bold text-gray-600 text-right">Actions</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Name</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Username</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Role</th>
+              <th className="p-4 font-bold text-gray-600 dark:text-gray-300 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {users.map((user) => <tr key={user.id}>
                 <td className="p-2 font-medium text-gray-800 whitespace-nowrap">
-                  <div className="p-4 font-medium text-gray-800">{user.name || "-"}</div>
+                  <div className="p-4 font-medium text-gray-800 dark:text-gray-300">{user.name || "-"}</div>
                 </td>
                 <td className="p-2 font-medium text-gray-800 whitespace-nowrap">
-                  <div className="p-4 font-medium text-gray-800">{user.username}</div>
+                  <div className="p-4 font-medium text-gray-800 dark:text-gray-300">{user.username}</div>
                 </td>
                 <td className="p-2 font-medium text-gray-800 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === "ADMIN" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800"}`}>
