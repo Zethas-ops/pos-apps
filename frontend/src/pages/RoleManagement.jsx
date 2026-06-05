@@ -139,7 +139,7 @@ function RoleManagement() {
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+          <thead className="bg-gray-200 dark:bg-gray-600 border-b border-gray-200 dark:border-gray-600">
             <tr>
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Name</th>
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Username</th>
@@ -147,7 +147,7 @@ function RoleManagement() {
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {users.map((user) => <tr key={user.id}>
                 <td className="p-2 font-medium text-gray-800 whitespace-nowrap">
                   <div className="p-4 font-medium text-gray-800 dark:text-gray-300">{user.name || "-"}</div>

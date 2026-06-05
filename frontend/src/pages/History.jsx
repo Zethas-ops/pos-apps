@@ -215,7 +215,7 @@ function History() {
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <tr className="bg-gray-200 dark:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">ID</th>
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Date</th>
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Customer</th>
@@ -227,15 +227,15 @@ function History() {
           </thead>
           <tbody>
             {filteredTransactions.map((t) => <React.Fragment key={t.transaction_id}>
-                <tr className="border-b border-gray-100 hover:bg-gray-50 dark:bg-gray-900 transition-colors cursor-pointer" onClick={() => setExpandedId(expandedId === t.transaction_id ? null : t.transaction_id)}>
-                  <td className="p-4 font-medium text-gray-800 dark:text-gray-100">
+                <tr className="border-b border-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900 transition-colors cursor-pointer" onClick={() => setExpandedId(expandedId === t.transaction_id ? null : t.transaction_id)}>
+                  <td className="p-4 font-medium text-gray-800 dark:text-gray-300">
                     <div className="flex items-center space-x-2">
                       {expandedId === t.transaction_id ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                       <span>#{t.invoice_no}</span>
                     </div>
                   </td>
                   <td className="p-4 text-gray-600 dark:text-gray-300">{moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</td>
-                  <td className="p-4 font-medium text-gray-800 dark:text-gray-100">{t.customer_name}</td>
+                  <td className="p-4 font-medium text-gray-800 dark:text-gray-300">{t.customer_name}</td>
                   <td className="p-4 text-gray-600 dark:text-gray-300">{t.table_no}</td>
                   <td className="p-4 font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">Rp {Number(t.total_price || 0).toLocaleString("id-ID")}</td>
                   <td className="p-4 max-w-[200px]">

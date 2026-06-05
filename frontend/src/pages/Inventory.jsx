@@ -123,7 +123,7 @@ function Inventory() {
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <tr className="bg-gray-200 dark:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">ID</th>
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Ingredient Name</th>
               <th className="p-4 font-bold text-gray-600 dark:text-gray-300">Current Stock</th>
@@ -132,7 +132,7 @@ function Inventory() {
             </tr>
           </thead>
           <tbody>
-            {filteredInventory.map((item) => <tr key={item.ingredient_id} className="border-b border-gray-100 hover:bg-gray-50 dark:bg-gray-900 transition-colors">
+            {filteredInventory.map((item) => <tr key={item.ingredient_id} className="border-b border-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900 transition-colors">
                 <td className="p-4 font-medium text-gray-800 dark:text-gray-300">#{item.ingredient_id}</td>
                 <td className="p-4 font-medium text-gray-800 dark:text-gray-300">{item.ingredient_name}</td>
                 <td className="p-4">

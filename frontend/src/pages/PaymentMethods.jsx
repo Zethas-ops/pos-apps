@@ -115,13 +115,13 @@ export default function PaymentMethods() {
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200 dark:bg-gray-700">
+            <tr className="bg-gray-200 border-b border-gray-200 dark:bg-gray-600">
               <th className="p-4 font-bold text-gray-700 dark:text-gray-300">Name</th>
               <th className="p-4 font-bold text-gray-700 dark:text-gray-300 text-center">Status</th>
               <th className="p-4 font-bold text-gray-700 dark:text-gray-300 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-gray-900">
+          <tbody className="bg-white dark:bg-gray-800">
             {methods.length === 0 ? (
               <tr>
                 <td colSpan="3" className="p-8 text-center text-gray-500">
@@ -130,7 +130,7 @@ export default function PaymentMethods() {
               </tr>
             ) : (
               methods.map((method) => (
-                <tr key={method.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={method.id} className="border-b border-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900 transition-colors">
                   <td className="p-4 font-semibold text-gray-800 dark:text-gray-300">{method.name}</td>
                   <td className="p-4 text-center">
                     <button
