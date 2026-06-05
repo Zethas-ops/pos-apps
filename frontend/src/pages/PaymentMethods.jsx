@@ -39,16 +39,26 @@ export default function PaymentMethods() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Check for uniqueness
+      const existing = methods.find(
+        (m) => m.name.toLowerCase() === formData.name.trim().toLowerCase() && 
+        (!editingMethod || m.id !== editingMethod.id)
+      );
+      if (existing) {
+        alert("Nama metode pembayaran sudah terpakai.");
+        return;
+      }
+
       if (editingMethod) {
         const { error } = await supabase
           .from('payment_methods')
-          .update(formData)
+          .update({ ...formData, name: formData.name.trim() })
           .eq('id', editingMethod.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('payment_methods')
-          .insert([formData]);
+          .insert([{ ...formData, name: formData.name.trim() }]);
         if (error) throw error;
       }
       setIsModalOpen(false);
@@ -59,6 +69,20 @@ export default function PaymentMethods() {
       } else {
         alert("Error saving payment method: " + err.message);
       }
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this payment method?")) return;
+    try {
+      const { error } = await supabase
+        .from('payment_methods')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      fetchMethods();
+    } catch (err) {
+      alert("Error deleting payment method: " + err.message);
     }
   };
 
@@ -125,6 +149,13 @@ export default function PaymentMethods() {
                       title="Edit"
                     >
                       <Edit2 size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(method.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-block"
+                      title="Delete"
+                    >
+                      <Trash2 size={18} />
                     </button>
                   </td>
                 </tr>

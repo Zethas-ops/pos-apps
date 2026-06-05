@@ -15,6 +15,8 @@ import Settings from "./pages/Settings";
 import RoleManagement from "./pages/RoleManagement";
 import PaymentMethods from "./pages/PaymentMethods";
 import Layout from "./components/Layout";
+import AlertModal from "./components/AlertModal";
+
 function PrivateRoute({ children, requirePermission }) {
   const token = localStorage.getItem("token");
   const userStr = localStorage.getItem("user");
@@ -31,6 +33,7 @@ function PrivateRoute({ children, requirePermission }) {
 }
 function App() {
   return <BrowserRouter>
+      <AlertModal />
       <Routes>
         <Route path="/login" element={<Login />} />
         

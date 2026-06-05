@@ -40,14 +40,21 @@ function Layout() {
     { path: "/settings", label: "Settings", icon: <SettingsIcon size={20} />, permission: "settings" },
   ];
 
-  // Apply theme on load
+  const [theme, setTheme] = React.useState(localStorage.getItem('theme') || 'light');
+
+  // Apply theme on load and when state changes
   React.useEffect(() => {
-    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, []);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -59,15 +66,11 @@ function Layout() {
             {user && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Welcome, {user.username}</p>}
           </div>
           <button
-            onClick={() => {
-              document.documentElement.classList.toggle('dark');
-              localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            }}
+            onClick={toggleTheme}
             className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             title="Toggle Dark Mode"
           >
-            <div className="hidden dark:block">☀️</div>
-            <div className="block dark:hidden">🌙</div>
+            {theme === 'dark' ? <div>☀️</div> : <div>🌙</div>}
           </button>
         </div>
         

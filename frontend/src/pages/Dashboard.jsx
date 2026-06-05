@@ -160,20 +160,22 @@ function Dashboard() {
           });
         }
       });
-      const topSelling = Object.keys(itemSales)
+      const allSoldItems = Object.keys(itemSales)
         .map(name => ({
           name,
           sold: itemSales[name].sold,
           revenue: itemSales[name].revenue
         }))
-        .sort((a, b) => b.sold - a.sold)
-        .slice(0, 5);
+        .sort((a, b) => b.sold - a.sold);
+
+      const topSelling = allSoldItems.slice(0, 5);
 
       setCharts({
         salesChart,
         hourlyTraffic,
         paymentMethods,
-        topSelling
+        topSelling,
+        allSoldItems
       });
 
     } catch (err) {
@@ -556,6 +558,36 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* All Sold Items */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <h2 className="text-lg font-bold text-gray-800 mb-6">All Sold Items</h2>
+        {charts.allSoldItems && charts.allSoldItems.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="p-3 font-bold text-gray-600">Product Name</th>
+                  <th className="p-3 font-bold text-gray-600">Quantity Sold</th>
+                  <th className="p-3 font-bold text-gray-600 text-right">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {charts.allSoldItems.map((item, idx) => (
+                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="p-3 font-medium text-gray-800">{item.name}</td>
+                    <td className="p-3 text-gray-600">{item.sold} items</td>
+                    <td className="p-3 text-gray-900 font-bold text-right">Rp {item.revenue.toLocaleString("id-ID")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center text-gray-500 py-8">No sales data available</div>
+        )}
+      </div>
+
     </div>;
 }
 export {

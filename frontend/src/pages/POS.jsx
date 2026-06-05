@@ -32,13 +32,26 @@ function POS() {
   const [selectedPromoId, setSelectedPromoId] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [splitPayments, setSplitPayments] = useState([]);
   const [cashAmount, setCashAmount] = useState("");
   const [qrisData, setQrisData] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const isProcessingRef = useRef(false);
+
+  const getSufficientPayment = () => {
+    if (paymentMethod === "Split Payment") {
+      const totalSplit = splitPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      return totalSplit >= totalCart;
+    }
+    if (paymentMethod === "Cash") {
+      return parseFloat(cashAmount) >= totalCart;
+    }
+    return true;
+  };
+
   useEffect(() => {
     fetchData();
-  }, []);
+  },[]);
   useEffect(() => {
     if (location.state?.bill) {
       const bill = location.state.bill;
@@ -522,17 +535,29 @@ function POS() {
       // 1. Create transaction record
       const actualCustomerName = customerName || "Guest";
       const finalCustomerName = transactionNote ? `${actualCustomerName} - Note: ${transactionNote}` : actualCustomerName;
+      
+      let finalPaymentMethod = paymentMethod;
+      let finalCash = paymentMethod === "Cash" ? Number(cashAmount) : totals.total;
+      let finalChange = paymentMethod === "Cash" ? Number(cashAmount) - totals.total : 0;
+      
+      if (paymentMethod === "Split Payment") {
+        finalPaymentMethod = splitPayments.map(p => `${p.method} (Rp ${Number(p.amount).toLocaleString('id-ID')})`).join(', ');
+        const totalSplit = splitPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+        finalCash = totalSplit; // Store total paid as cash_amount conceptually
+        finalChange = Math.max(0, totalSplit - totals.total);
+      }
+
       const { data: transaction, error: txError } = await supabase
         .from('transactions')
         .insert([{
           table_no: tableNo,
           customer_name: finalCustomerName,
-          payment_method: paymentMethod,
+          payment_method: finalPaymentMethod,
           subtotal: totals.subtotal,
           tax: totals.tax,
           discount: totals.discount,
-          cash_amount: paymentMethod === "Cash" ? Number(cashAmount) : totals.total,
-          change_amount: paymentMethod === "Cash" ? Number(cashAmount) - totals.total : 0,
+          cash_amount: finalCash,
+          change_amount: finalChange,
           total_price: totals.total,
           date: moment().tz(TIMEZONE).toISOString()
         }])
@@ -696,19 +721,19 @@ function POS() {
               <span>Rp ${Number(totals.total || 0).toLocaleString("id-ID")}</span>
             </div>
             <div class="divider"></div>
-            ${paymentMethod === "Cash" ? `
+            ${paymentMethod === "Cash" || paymentMethod === "Split Payment" ? `
             <div class="item">
-              <span>Amount Cash</span>
-              <span>Rp ${Number(cashAmount).toLocaleString("id-ID")}</span>
+              <span>Amount Paid</span>
+              <span>Rp ${Number(finalCash).toLocaleString("id-ID")}</span>
             </div>
             <div class="item">
               <span>Change</span>
-              <span>Rp ${(Number(cashAmount) - totals.total).toLocaleString("id-ID")}</span>
+              <span>Rp ${Number(finalChange).toLocaleString("id-ID")}</span>
             </div>
             ` : ""}
             <div class="item">
-              <span>Payment Method</span>
-              <span>${paymentMethod}</span>
+              <span>Payment</span>
+              <span>${finalPaymentMethod}</span>
             </div>
             <div class="footer">
               <p>*** THANK YOU ***</p>
@@ -729,12 +754,12 @@ function POS() {
       setTimeout(() => {
         document.body.removeChild(iframe);
       }, 1000);
-      alert("Payment successful and receipt printed!");
       setCart([]);
       setTableNo("");
       setCustomerName("");
       setShowPayment(false);
       setCashAmount("");
+      setSplitPayments([{ method: paymentMethodsList[0]?.name || 'Cash', amount: '' }]);
       setQrisData(null);
       fetchData(); // Refresh stock
     } catch (err) {
@@ -1230,7 +1255,7 @@ function POS() {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3">Payment Method</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 mb-3">
                   {paymentMethodsList.map((pmData) => <button
     key={pmData.id}
     onClick={() => {
@@ -1244,8 +1269,73 @@ function POS() {
   >
                       {pmData.name}
                     </button>)}
+                    
+                  <button
+                    onClick={() => {
+                      setPaymentMethod("Split Payment");
+                      setSplitPayments([{ method: paymentMethodsList[0]?.name || 'Cash', amount: totals.total }]);
+                      setQrisData(null);
+                    }}
+                    className={clsx(
+                      "py-3 px-4 rounded-xl font-medium border-2 transition-all text-left",
+                      paymentMethod === "Split Payment" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
+                    )}
+                  >
+                    Split Payment
+                  </button>
                 </div>
               </div>
+
+              {paymentMethod === "Split Payment" && <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold text-gray-700">Split Details</span>
+                  <span className="text-sm font-medium text-gray-500">
+                    Remains: Rp {Number(Math.max(0, totalCart - splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0))).toLocaleString('id-ID')}
+                  </span>
+                </div>
+                {splitPayments.map((sp, idx) => (
+                  <div key={idx} className="flex space-x-2 items-center">
+                    <select
+                      value={sp.method}
+                      onChange={(e) => {
+                        const newSplit = [...splitPayments];
+                        newSplit[idx].method = e.target.value;
+                        setSplitPayments(newSplit);
+                      }}
+                      className="flex-1 p-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500"
+                    >
+                      {paymentMethodsList.map(pm => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
+                    </select>
+                    <input
+                      type="number"
+                      value={sp.amount}
+                      onChange={(e) => {
+                        const newSplit = [...splitPayments];
+                        newSplit[idx].amount = e.target.value;
+                        setSplitPayments(newSplit);
+                      }}
+                      placeholder="Amount"
+                      className="w-32 p-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500 text-right font-medium"
+                    />
+                    <button
+                      onClick={() => {
+                        if (splitPayments.length > 1) {
+                          setSplitPayments(splitPayments.filter((_, i) => i !== idx));
+                        }
+                      }}
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-200"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => setSplitPayments([...splitPayments, { method: paymentMethodsList[0]?.name || 'Cash', amount: '' }])}
+                  className="w-full py-2 bg-white border border-dashed border-gray-300 rounded-lg text-gray-600 font-bold hover:bg-gray-50 flex justify-center items-center gap-2"
+                >
+                  <Plus size={16} /> Add Payment Method
+                </button>
+              </div>}
 
               {paymentMethod === "Cash" && <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <div>
@@ -1281,7 +1371,7 @@ function POS() {
             <div className="p-4 border-t bg-gray-50">
               <button
     onClick={processPayment}
-    disabled={isProcessing || (paymentMethod === "Cash" && (!cashAmount || parseFloat(cashAmount) < totalCart))}
+    disabled={isProcessing || !getSufficientPayment()}
     className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-green-200"
   >
                 {isProcessing ? "Processing..." : "Complete Payment"}
