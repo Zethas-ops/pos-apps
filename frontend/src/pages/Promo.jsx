@@ -281,30 +281,30 @@ function Promo() {
     /* Add Modal */
   }
       {showModal && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b bg-gray-50">
-              <h2 className="text-2xl font-bold text-gray-800">Create Promotion</h2>
+          <div className="bg-white dark:bg-gray-700 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-300">Create Promotion</h2>
             </div>
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1 space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Title *</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Title *</label>
                   <input
     required
     type="text"
     value={formData.title}
     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., Weekend Special"
   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Type *</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Type *</label>
                   <select
     required
     value={formData.type}
     onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
                     <option value="DISCOUNT">Discount Percentage</option>
                     <option value="MIN_BUY_FREE">Minimum Buy X Free Y</option>
@@ -315,7 +315,7 @@ function Promo() {
               </div>
 
               {formData.type === "DISCOUNT" ? <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Discount Percentage (%) *</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Discount Percentage (%) *</label>
                   <input
     required
     type="number"
@@ -328,7 +328,7 @@ function Promo() {
   />
                 </div> : formData.type === "MIN_BUY_FREE" ? <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Buy Menu *</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Buy Menu *</label>
                     <select
     required
     value={formData.min_buy_menu_id}
@@ -340,7 +340,7 @@ function Promo() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Buy Qty *</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Buy Qty *</label>
                     <input
     required
     type="number"
@@ -352,7 +352,7 @@ function Promo() {
   />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Free Menu *</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Free Menu *</label>
                     <select
     required
     value={formData.free_menu_id}
@@ -364,7 +364,7 @@ function Promo() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Free Qty *</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Free Qty *</label>
                     <input
     required
     type="number"
@@ -377,7 +377,7 @@ function Promo() {
                   </div>
                 </div> : formData.type === "MIN_BUY_DISCOUNT" ? <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Buy Menu (Optional)</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Buy Menu (Optional)</label>
                     <select
     value={formData.min_buy_menu_id}
     onChange={(e) => setFormData({ ...formData, min_buy_menu_id: e.target.value })}
@@ -388,7 +388,7 @@ function Promo() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Buy Qty *</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Buy Qty *</label>
                     <input
     required
     type="number"
@@ -400,7 +400,7 @@ function Promo() {
   />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Discount Menu (Optional)</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Discount Menu (Optional)</label>
                     <select
     value={formData.free_menu_id}
     onChange={(e) => setFormData({ ...formData, free_menu_id: e.target.value })}
@@ -411,7 +411,7 @@ function Promo() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Discount Qty (Optional)</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Discount Qty (Optional)</label>
                     <input
     type="number"
     min="1"
@@ -422,7 +422,7 @@ function Promo() {
   />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Discount Amount (Rp)</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Discount Amount (Rp)</label>
                     <input
     type="number"
     min="1"
@@ -433,7 +433,7 @@ function Promo() {
   />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">OR Discount Percentage (%)</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">OR Discount Percentage (%)</label>
                     <input
     type="number"
     min="1"
@@ -446,19 +446,19 @@ function Promo() {
                   </div>
                 </div> : formData.type === "MIN_NOMINAL_FREE" ? <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="md:col-span-3">
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Minimum Nominal (Rp) *</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Minimum Nominal (Rp) *</label>
                     <input
     required
     type="number"
     min="1"
     value={formData.min_nominal}
     onChange={(e) => setFormData({ ...formData, min_nominal: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 50000"
   />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Free Menu (Optional)</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Free Menu (Optional)</label>
                     <select
     value={formData.free_menu_id}
     onChange={(e) => setFormData({ ...formData, free_menu_id: e.target.value })}
@@ -469,7 +469,7 @@ function Promo() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">OR Discount Amount (Optional)</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">OR Discount Amount (Optional)</label>
                     <input
     type="number"
     min="1"
@@ -480,7 +480,7 @@ function Promo() {
   />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">OR Discount Percentage (%)</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">OR Discount Percentage (%)</label>
                     <input
     type="number"
     min="1"
@@ -495,7 +495,7 @@ function Promo() {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Start Date *</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Start Date *</label>
                   <input
     required
     type="date"
@@ -505,7 +505,7 @@ function Promo() {
   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">End Date *</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">End Date *</label>
                   <input
     required
     type="date"
@@ -518,7 +518,7 @@ function Promo() {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Day Filter</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Day Filter</label>
                   <select
     value={formData.day_filter}
     onChange={(e) => setFormData({ ...formData, day_filter: e.target.value })}
@@ -537,7 +537,7 @@ function Promo() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Time Filter</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Time Filter</label>
                   <select
     value={formData.time_filter}
     onChange={(e) => setFormData({ ...formData, time_filter: e.target.value })}
@@ -554,7 +554,7 @@ function Promo() {
 
               {formData.time_filter === "Custom Time" && <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Start Time *</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Start Time *</label>
                     <input
     required
     type="time"
@@ -564,7 +564,7 @@ function Promo() {
   />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">End Time *</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">End Time *</label>
                     <input
     required
     type="time"
