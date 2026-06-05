@@ -316,65 +316,75 @@ function Dashboard() {
     );
   };
   const peakHour = getPeakHour();
-  if (loading && !metrics.todaySales) return <div className="p-8">Loading dashboard...</div>;
-  return <div className="p-8 space-y-6 bg-gray-50 min-h-screen">
+  if (loading && !metrics.todaySales) return <div className="p-8 dark:bg-gray-900 dark:text-gray-100">Loading dashboard...</div>;
+  return <div className="p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
       </div>
 
       {
     /* Metrics Cards */
   }
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Items Sold ({timeRangeLabel[timeRange]})</p>
-            <p className="text-2xl font-bold text-gray-900">{metrics.filteredItemsQty || 0} items</p>
-            <p className="text-xs text-gray-500 mt-1">Rp {metrics.filteredItemsValue?.toLocaleString("id-ID") || 0}</p>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 line-clamp-1">Items Sold ({timeRangeLabel[timeRange]})</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{metrics.filteredItemsQty || 0} items</p>
+            </div>
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full shrink-0">
+              <Package size={20} />
+            </div>
           </div>
-          <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
-            <Package size={20} />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 truncate">Rp {metrics.filteredItemsValue?.toLocaleString("id-ID") || 0}</p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 line-clamp-1">Today's Revenue</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate" title={`Rp ${metrics.todaySales?.toLocaleString("id-ID") || 0}`}>Rp {metrics.todaySales?.toLocaleString("id-ID") || 0}</p>
+            </div>
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full shrink-0">
+              <DollarSign size={20} />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 truncate">{metrics.todayOrders || 0} orders</p>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 line-clamp-1">This Week</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate" title={`Rp ${metrics.weekSales?.toLocaleString("id-ID") || 0}`}>Rp {metrics.weekSales?.toLocaleString("id-ID") || 0}</p>
+            </div>
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full shrink-0">
+              <Calendar size={20} />
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Today's Revenue</p>
-            <p className="text-2xl font-bold text-gray-900">Rp {metrics.todaySales?.toLocaleString("id-ID") || 0}</p>
-            <p className="text-xs text-gray-500 mt-1">{metrics.todayOrders || 0} orders</p>
-          </div>
-          <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
-            <DollarSign size={20} />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">This Week</p>
-            <p className="text-2xl font-bold text-gray-900">Rp {metrics.weekSales?.toLocaleString("id-ID") || 0}</p>
-          </div>
-          <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
-            <Calendar size={20} />
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 line-clamp-1">This Month</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate" title={`Rp ${metrics.monthSales?.toLocaleString("id-ID") || 0}`}>Rp {metrics.monthSales?.toLocaleString("id-ID") || 0}</p>
+            </div>
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full shrink-0">
+              <TrendingUp size={20} />
+            </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">This Month</p>
-            <p className="text-2xl font-bold text-gray-900">Rp {metrics.monthSales?.toLocaleString("id-ID") || 0}</p>
-          </div>
-          <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
-            <TrendingUp size={20} />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between relative">
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Today's Orders</p>
-            <p className="text-2xl font-bold text-gray-900">{metrics.todayOrders || 0}</p>
-          </div>
-          <div className="absolute top-6 right-6 p-2 bg-blue-50 text-blue-500 rounded-full">
-            <ShoppingBag size={20} />
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1 line-clamp-1">Today's Orders</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{metrics.todayOrders || 0}</p>
+            </div>
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400 rounded-full shrink-0">
+              <ShoppingBag size={20} />
+            </div>
           </div>
         </div>
       </div>
@@ -382,10 +392,10 @@ function Dashboard() {
       {
     /* Sales Last 7 Days */
   }
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-4">
-            <h2 className="text-lg font-bold text-gray-800">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
               Sales {timeRangeLabel[timeRange]}
             </h2>
             {isAdmin && <button
@@ -396,11 +406,11 @@ function Dashboard() {
                 <span>Export CSV</span>
               </button>}
           </div>
-          <div className="flex flex-wrap items-center gap-3 bg-gray-50 p-2 rounded-xl border border-gray-200">
+          <div className="flex flex-wrap items-center gap-3 bg-gray-50 dark:bg-gray-900 p-2 rounded-xl border border-gray-200 dark:border-gray-700">
             <select
     value={paymentMethod}
     onChange={(e) => setPaymentMethod(e.target.value)}
-    className="bg-transparent text-sm font-medium text-gray-700 outline-none px-2 py-1 cursor-pointer"
+    className="bg-transparent dark:text-white text-sm font-medium text-gray-700 dark:text-gray-300 outline-none px-2 py-1 cursor-pointer"
   >
               <option value="">All Payments</option>
               <option value="Cash">Cash</option>
@@ -409,12 +419,12 @@ function Dashboard() {
               <option value="Debit / Credit Card">Debit / Credit Card</option>
             </select>
             
-            <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
+            <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
 
             <select
     value={timeRange}
     onChange={handleTimeRangeChange}
-    className="bg-transparent text-sm font-medium text-gray-700 outline-none px-2 py-1 cursor-pointer"
+    className="bg-transparent dark:text-white text-sm font-medium text-gray-700 dark:text-gray-300 outline-none px-2 py-1 cursor-pointer"
   >
               <option value="today">Today</option>
               <option value="yesterday">Yesterday</option>
@@ -426,29 +436,29 @@ function Dashboard() {
             </select>
             
             {timeRange === "custom" && <>
-                <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
+                <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 font-medium">From</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">From</span>
                   <input
     type="date"
     value={startDate}
     onChange={(e) => setStartDate(e.target.value)}
-    className="bg-transparent text-sm outline-none"
+    className="bg-transparent dark:text-white text-sm dark:text-gray-300 outline-none"
   />
                 </div>
-                <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
+                <div className="hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 font-medium">To</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">To</span>
                   <input
     type="date"
     value={endDate}
     onChange={(e) => setEndDate(e.target.value)}
-    className="bg-transparent text-sm outline-none"
+    className="bg-transparent dark:text-white text-sm dark:text-gray-300 outline-none"
   />
                 </div>
                 <button
     onClick={handleApplyFilter}
-    className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
+    className="bg-blue-50 dark:bg-blue-900/300 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
   >
                   Apply
                 </button>
@@ -473,24 +483,26 @@ function Dashboard() {
       {
     /* Hourly Traffic */
   }
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <Clock size={18} className="text-gray-500" />
-            <h2 className="text-lg font-bold text-gray-800">Hourly Traffic ({timeRangeLabel[timeRange]})</h2>
+            <Clock size={18} className="text-gray-500 dark:text-gray-400" />
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">Hourly Traffic ({timeRangeLabel[timeRange]})</h2>
           </div>
-          {peakHour && <div className="text-sm text-gray-600">
+          {peakHour && <div className="text-sm text-gray-600 dark:text-gray-300">
               Peak: <span className="font-bold">{peakHour.label}</span> - {peakHour.orders} orders - Rp {peakHour.revenue.toLocaleString("id-ID")}
             </div>}
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={charts.hourlyTraffic} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={document.documentElement?.classList?.contains('dark') ? '#374151' : '#f0f0f0'} />
               <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} dy={10} />
               <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} />
               <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#888" }} tickFormatter={(val) => `${val / 1e3}k`} />
-              <Tooltip formatter={(value, name) => {
+              <Tooltip
+                contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", backgroundColor: '#fff', color: '#000' }}
+                formatter={(value, name) => {
                 if (name === "Revenue") {
                   return `Rp ${value.toLocaleString("id-ID")}`;
                 }
@@ -512,8 +524,8 @@ function Dashboard() {
         {
     /* Payment Methods */
   }
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-          <h2 className="text-lg font-bold text-gray-800 mb-6">Payment Methods</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6">Payment Methods</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -529,7 +541,7 @@ function Dashboard() {
   >
                   {charts.paymentMethods?.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
+                <Tooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)", backgroundColor: '#fff', color: '#000' }} />
                 <Legend iconType="square" wrapperStyle={{ fontSize: "12px" }} />
               </PieChart>
             </ResponsiveContainer>
@@ -539,52 +551,52 @@ function Dashboard() {
         {
     /* Top Selling Items */
   }
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-          <h2 className="text-lg font-bold text-gray-800 mb-6">Top Selling Items</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6">Top Selling Items</h2>
           <div className="space-y-4">
             {charts.topSelling?.map((item, index) => <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <span className="text-lg font-bold text-gray-900 w-4">{index + 1}</span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white w-4">{index + 1}</span>
                   <div>
-                    <p className="text-sm font-bold text-gray-800">{item.name}</p>
-                    <p className="text-xs text-gray-500">{item.sold} sold</p>
+                    <p className="text-sm font-bold text-gray-800 dark:text-gray-100">{item.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.sold} sold</p>
                   </div>
                 </div>
-                <div className="text-sm font-bold text-gray-900">
+                <div className="text-sm font-bold text-gray-900 dark:text-white">
                   Rp {item.revenue.toLocaleString("id-ID")}
                 </div>
               </div>)}
-            {(!charts.topSelling || charts.topSelling.length === 0) && <div className="text-center text-gray-500 py-8">No sales data available</div>}
+            {(!charts.topSelling || charts.topSelling.length === 0) && <div className="text-center text-gray-500 dark:text-gray-400 py-8">No sales data available</div>}
           </div>
         </div>
       </div>
 
       {/* All Sold Items */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-800 mb-6">All Sold Items</h2>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-6">All Sold Items</h2>
         {charts.allSoldItems && charts.allSoldItems.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="p-3 font-bold text-gray-600">Product Name</th>
-                  <th className="p-3 font-bold text-gray-600">Quantity Sold</th>
-                  <th className="p-3 font-bold text-gray-600 text-right">Revenue</th>
+                <tr className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                  <th className="p-3 font-bold text-gray-600 dark:text-gray-400">Product Name</th>
+                  <th className="p-3 font-bold text-gray-600 dark:text-gray-400">Quantity Sold</th>
+                  <th className="p-3 font-bold text-gray-600 dark:text-gray-400 text-right">Revenue</th>
                 </tr>
               </thead>
               <tbody>
                 {charts.allSoldItems.map((item, idx) => (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="p-3 font-medium text-gray-800">{item.name}</td>
-                    <td className="p-3 text-gray-600">{item.sold} items</td>
-                    <td className="p-3 text-gray-900 font-bold text-right">Rp {item.revenue.toLocaleString("id-ID")}</td>
+                  <tr key={idx} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <td className="p-3 font-medium text-gray-800 dark:text-gray-100">{item.name}</td>
+                    <td className="p-3 text-gray-600 dark:text-gray-300">{item.sold} items</td>
+                    <td className="p-3 text-gray-900 dark:text-white font-bold text-right">Rp {item.revenue.toLocaleString("id-ID")}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="text-center text-gray-500 py-8">No sales data available</div>
+          <div className="text-center text-gray-500 dark:text-gray-400 py-8">No sales data available</div>
         )}
       </div>
 

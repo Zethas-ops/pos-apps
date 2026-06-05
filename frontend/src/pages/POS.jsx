@@ -748,8 +748,7 @@ function POS() {
       iframe.contentWindow.document.write(receiptContent);
       iframe.contentWindow.document.close();
       
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
+      // Removed window.print() so no popup confirmation displays
       
       setTimeout(() => {
         document.body.removeChild(iframe);
@@ -892,22 +891,22 @@ function POS() {
     if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
-  return <div className="flex h-screen bg-gray-50 overflow-hidden">
+  return <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {
     /* Left Side - Menu */
   }
-      <div className="flex-1 flex flex-col h-full border-r border-gray-200">
+      <div className="flex-1 flex flex-col h-full border-r border-gray-200 dark:border-gray-700">
         {
     /* Header */
   }
-        <div className="p-5 bg-white border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-5 bg-white dark:bg-gray-800 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex space-x-2 overflow-x-auto pb-2 w-full sm:w-auto">
             {categories.map((cat) => <button
     key={cat}
     onClick={() => setActiveCategory(cat)}
     className={clsx(
       "px-4 py-2 rounded-full whitespace-nowrap font-medium transition-colors",
-      activeCategory === cat ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+      activeCategory === cat ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-600"
     )}
   >
                 {cat}
@@ -920,7 +919,7 @@ function POS() {
     placeholder="Search menu..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
+    className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none sm:w-64"
   />
           </div>
         </div>
@@ -936,13 +935,13 @@ function POS() {
     return <div
       key={item.menu_id}
       onClick={() => !outOfStock && handleMenuClick(item)}
-      className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col ${outOfStock ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-md transition-shadow"}`}
+      className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col ${outOfStock ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-md transition-shadow"}`}
     >
-                <div className="h-40 bg-blue-50 relative flex items-center justify-center">
-                  <span className="text-blue-500 font-bold text-6xl opacity-30 select-none">
+                <div className="h-40 bg-blue-50 dark:bg-blue-900/30 relative flex items-center justify-center">
+                  <span className="text-blue-500 dark:text-blue-400 font-bold text-6xl opacity-30 select-none">
                     {item.name ? item.name.charAt(0).toUpperCase() : '?'}
                   </span>
-                  <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded-lg text-xs font-bold text-gray-800">
+                  <div className="absolute top-2 right-2 bg-white dark:bg-gray-800/90 px-2 py-1 rounded-lg text-xs font-bold text-gray-800 dark:text-gray-100">
                     {item.category}
                   </div>
                   {outOfStock && <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -950,8 +949,8 @@ function POS() {
                     </div>}
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between">
-                  <h3 className="font-semibold text-gray-800 leading-tight mb-2">{item.name}</h3>
-                  <p className="text-blue-600 font-bold">Rp {Number(item.price || 0).toLocaleString("id-ID")}</p>
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-100 leading-tight mb-2">{item.name}</h3>
+                  <p className="text-blue-600 dark:text-blue-400 font-bold">Rp {Number(item.price || 0).toLocaleString("id-ID")}</p>
                 </div>
               </div>;
   })}
@@ -962,9 +961,9 @@ function POS() {
       {
     /* Right Side - Cart */
   }
-      <div className="w-96 bg-white flex flex-col h-full shadow-xl z-10">
-        <div className="p-7.5 border-b bg-gray-50 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-800">Current Order</h2>
+      <div className="w-96 bg-white dark:bg-gray-800 flex flex-col h-full shadow-xl z-10">
+        <div className="p-7.5 border-b bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Current Order</h2>
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold">
             {cart.length} items
           </span>
@@ -977,25 +976,25 @@ function POS() {
           {cart.length === 0 ? <div className="h-full flex flex-col items-center justify-center text-gray-400">
               <ShoppingBag size={48} className="mb-4 opacity-50" />
               <p>Cart is empty</p>
-            </div> : cart.map((item, index) => <div key={index} className="flex flex-col p-3 border border-gray-100 rounded-xl bg-gray-50">
+            </div> : cart.map((item, index) => <div key={index} className="flex flex-col p-3 border border-gray-100 rounded-xl bg-gray-50 dark:bg-gray-900">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex-1">
-                    <h4 className="font-bold text-gray-800">{item.menu_name}</h4>
-                    <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                    <h4 className="font-bold text-gray-800 dark:text-gray-100">{item.menu_name}</h4>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-0.5">
                       {item.drink_type && <p>{item.drink_type} • {item.sugar_level} Sugar</p>}
                       {item.addons.map((a, i) => <p key={i}>+ {a.name} (Rp {a.price})</p>)}
                       {item.note && <p className="italic text-gray-400">Note: {item.note}</p>}
                     </div>
                   </div>
-                  <p className="font-bold text-blue-600">Rp {Number(item.subtotal || 0).toLocaleString("id-ID")}</p>
+                  <p className="font-bold text-blue-600 dark:text-blue-400">Rp {Number(item.subtotal || 0).toLocaleString("id-ID")}</p>
                 </div>
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
-                  <div className="flex items-center space-x-3 bg-white rounded-lg border border-gray-200 p-1">
-                    <button onClick={() => updateCartQty(index, -1)} disabled={item.is_auto_free} className="p-1 hover:bg-gray-100 rounded text-gray-600 disabled:opacity-50">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1">
+                    <button onClick={() => updateCartQty(index, -1)} disabled={item.is_auto_free} className="p-1 hover:bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 disabled:opacity-50">
                       <Minus size={16} />
                     </button>
                     <span className="font-bold w-6 text-center">{item.qty}</span>
-                    <button onClick={() => updateCartQty(index, 1)} disabled={item.is_auto_free} className="p-1 hover:bg-gray-100 rounded text-gray-600 disabled:opacity-50">
+                    <button onClick={() => updateCartQty(index, 1)} disabled={item.is_auto_free} className="p-1 hover:bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 disabled:opacity-50">
                       <Plus size={16} />
                     </button>
                   </div>
@@ -1009,15 +1008,15 @@ function POS() {
         {
     /* Checkout Section */
   }
-        <div className="p-4 border-t bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="p-4 border-t bg-white dark:bg-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
           <div className="space-y-3 mb-4">
             <div className="flex space-x-3">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Order Type *</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Order Type *</label>
                 <select
     value={tableNo}
     onChange={(e) => setTableNo(e.target.value)}
-    className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
   >
                   <option value="">Select Type</option>
                   <option value="Dine In">Dine In</option>
@@ -1025,23 +1024,23 @@ function POS() {
                 </select>
               </div>
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Customer (Optional)</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Customer (Optional)</label>
                 <input
     type="text"
     value={customerName}
     onChange={(e) => setCustomerName(e.target.value)}
     placeholder="Name"
-    className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
   />
               </div>
             </div>
             
             <div className="mb-3">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Promo (Optional)</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Promo (Optional)</label>
               <select
                 value={selectedPromoId}
                 onChange={(e) => setSelectedPromoId(e.target.value)}
-                className="w-full p-2 border border-blue-200 bg-blue-50 text-blue-800 rounded-lg outline-none focus:border-blue-500 font-medium"
+                className="w-full p-2 border border-blue-200 bg-blue-50 dark:bg-blue-900/30 text-blue-800 rounded-lg outline-none focus:border-blue-500 font-medium"
               >
                 <option value="">No Promo</option>
                 {promos.filter(isPromoValid).map(p => (
@@ -1051,20 +1050,20 @@ function POS() {
             </div>
 
             <div className="flex justify-between items-center py-1">
-              <span className="text-gray-500 text-sm">Subtotal</span>
-              <span className="font-medium text-gray-800">Rp {Number(totals.subtotal || 0).toLocaleString("id-ID")}</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">Subtotal</span>
+              <span className="font-medium text-gray-800 dark:text-gray-100">Rp {Number(totals.subtotal || 0).toLocaleString("id-ID")}</span>
             </div>
             {totals.discount > 0 && <div className="flex justify-between items-center py-1">
                 <span className="text-green-500 text-sm">Discount</span>
                 <span className="font-medium text-green-600">-Rp {Number(totals.discount || 0).toLocaleString("id-ID")}</span>
               </div>}
             <div className="flex justify-between items-center py-1">
-              <span className="text-gray-500 text-sm">PPN 11%</span>
-              <span className="font-medium text-gray-800">Rp {Number(totals.tax || 0).toLocaleString("id-ID")}</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">PPN 11%</span>
+              <span className="font-medium text-gray-800 dark:text-gray-100">Rp {Number(totals.tax || 0).toLocaleString("id-ID")}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-t border-gray-100 mt-2">
-              <span className="text-gray-500 font-bold">Total</span>
-              <span className="text-2xl font-black text-gray-800">Rp {Number(totals.total || 0).toLocaleString("id-ID")}</span>
+              <span className="text-gray-500 dark:text-gray-400 font-bold">Total</span>
+              <span className="text-2xl font-black text-gray-800 dark:text-gray-100">Rp {Number(totals.total || 0).toLocaleString("id-ID")}</span>
             </div>
           </div>
 
@@ -1089,10 +1088,10 @@ function POS() {
     /* Options Modal */
   }
       {showOptions && selectedMenu && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-              <h3 className="text-xl font-bold text-gray-800">{selectedMenu.name}</h3>
-              <button onClick={() => setShowOptions(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">{selectedMenu.name}</h3>
+              <button onClick={() => setShowOptions(false)} className="p-2 hover:bg-gray-200 dark:bg-gray-600 rounded-full text-gray-500 dark:text-gray-400 transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -1102,11 +1101,11 @@ function POS() {
     /* Quantity */
   }
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-3">Quantity</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Quantity</label>
                 <div className="flex items-center space-x-4">
                   <button
     onClick={() => setQty(Math.max(1, qty - 1))}
-    className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center hover:border-blue-500 hover:text-blue-500 transition-colors"
+    className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center hover:border-blue-500 hover:text-blue-500 dark:text-blue-400 transition-colors"
   >
                     <Minus size={20} />
                   </button>
@@ -1114,7 +1113,7 @@ function POS() {
                   <button
     onClick={() => setQty(Math.min(getMaxAllowedQty(), qty + 1))}
     disabled={qty >= getMaxAllowedQty()}
-    className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center hover:border-blue-500 hover:text-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center hover:border-blue-500 hover:text-blue-500 dark:text-blue-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
   >
                     <Plus size={20} />
                   </button>
@@ -1126,14 +1125,14 @@ function POS() {
   }
               {(selectedMenu.category === "Coffee" || selectedMenu.category === "Non Coffee") && <>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-3">Type</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Type</label>
                     <div className="grid grid-cols-2 gap-3">
                       {["Hot", "Ice"].map((type) => <button
     key={type}
     onClick={() => setDrinkType(type)}
     className={clsx(
       "py-3 rounded-xl font-medium border-2 transition-all",
-      drinkType === type ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
+      drinkType === type ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:border-gray-600"
     )}
   >
                           {type}
@@ -1142,14 +1141,14 @@ function POS() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-3">Sugar Level</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Sugar Level</label>
                     <div className="grid grid-cols-2 gap-3">
                       {["No Sugar", "Less", "Normal", "Extra"].map((level) => <button
     key={level}
     onClick={() => setSugarLevel(level)}
     className={clsx(
       "py-3 rounded-xl font-medium border-2 transition-all",
-      sugarLevel === level ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
+      sugarLevel === level ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:border-gray-600"
     )}
   >
                           {level}
@@ -1162,7 +1161,7 @@ function POS() {
     /* Addons */
   }
               {selectedMenu.addons && selectedMenu.addons.length > 0 && <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-3">Add-ons</label>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Add-ons</label>
                   <div className="space-y-2">
                     {selectedMenu.addons.map((addon) => {
     const isSelected = selectedAddons.find((a) => a.menu_id === addon.menu_id);
@@ -1179,20 +1178,20 @@ function POS() {
       }}
       className={clsx(
         "w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all",
-        isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300",
+        isSelected ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30" : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600",
         outOfStock && "opacity-50 cursor-not-allowed"
       )}
     >
                           <div className="flex items-center space-x-3">
                             <div className={clsx(
       "w-6 h-6 rounded border flex items-center justify-center",
-      isSelected ? "bg-blue-500 border-blue-500 text-white" : "border-gray-300"
+      isSelected ? "bg-blue-50 dark:bg-blue-900/300 border-blue-500 text-white" : "border-gray-300 dark:border-gray-600"
     )}>
                               {isSelected && <Check size={16} />}
                             </div>
-                            <span className="font-medium text-gray-800">{addon.name} {outOfStock && <span className="text-xs text-red-500 ml-2">(Out of Stock)</span>}</span>
+                            <span className="font-medium text-gray-800 dark:text-gray-100">{addon.name} {outOfStock && <span className="text-xs text-red-500 ml-2">(Out of Stock)</span>}</span>
                           </div>
-                          <span className="text-gray-500">+ Rp {Number(addon.price || 0).toLocaleString("id-ID")}</span>
+                          <span className="text-gray-500 dark:text-gray-400">+ Rp {Number(addon.price || 0).toLocaleString("id-ID")}</span>
                         </button>;
   })}
                   </div>
@@ -1202,18 +1201,18 @@ function POS() {
     /* Notes */
   }
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Special Request (Optional)</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">Special Request (Optional)</label>
                 <textarea
                   value={itemNote}
                   onChange={(e) => setItemNote(e.target.value)}
                   placeholder="E.g., less ice, extra hot..."
-                  className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                   rows={2}
                 ></textarea>
               </div>
             </div>
 
-            <div className="p-4 border-t bg-gray-50">
+            <div className="p-4 border-t bg-gray-50 dark:bg-gray-900">
               <button
     onClick={handleAddToCart}
     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-blue-200"
@@ -1228,33 +1227,33 @@ function POS() {
     /* Payment Modal */
   }
       {showPayment && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto flex flex-col">
-            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-              <h3 className="text-xl font-bold text-gray-800">Payment</h3>
-              <button onClick={() => setShowPayment(false)} className="p-2 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="p-4 border-b flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">Payment</h3>
+              <button onClick={() => setShowPayment(false)} className="p-2 hover:bg-gray-200 dark:bg-gray-600 rounded-full text-gray-500 dark:text-gray-400 transition-colors">
                 <X size={20} />
               </button>
             </div>
 
             <div className="p-6 space-y-6">
               <div className="text-center">
-                <p className="text-gray-500 font-medium mb-1">Total Amount</p>
-                <p className="text-4xl font-black text-gray-800">Rp {Number(totalCart || 0).toLocaleString("id-ID")}</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-1">Total Amount</p>
+                <p className="text-4xl font-black text-gray-800 dark:text-gray-100">Rp {Number(totalCart || 0).toLocaleString("id-ID")}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Transaction Notes/Remarks (Optional)</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">Transaction Notes/Remarks (Optional)</label>
                 <textarea
                   value={transactionNote}
                   onChange={(e) => setTransactionNote(e.target.value)}
                   placeholder="E.g., Customer requested split bill, special occasion..."
-                  className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                   rows={2}
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-3">Payment Method</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Payment Method</label>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   {paymentMethodsList.map((pmData) => <button
     key={pmData.id}
@@ -1264,7 +1263,7 @@ function POS() {
     }}
     className={clsx(
       "py-3 px-4 rounded-xl font-medium border-2 transition-all text-left",
-      paymentMethod === pmData.name ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
+      paymentMethod === pmData.name ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:border-gray-600"
     )}
   >
                       {pmData.name}
@@ -1278,7 +1277,7 @@ function POS() {
                     }}
                     className={clsx(
                       "py-3 px-4 rounded-xl font-medium border-2 transition-all text-left",
-                      paymentMethod === "Split Payment" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600 hover:border-gray-300"
+                      paymentMethod === "Split Payment" ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:border-gray-600"
                     )}
                   >
                     Split Payment
@@ -1286,10 +1285,10 @@ function POS() {
                 </div>
               </div>
 
-              {paymentMethod === "Split Payment" && <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+              {paymentMethod === "Split Payment" && <div className="space-y-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-bold text-gray-700">Split Details</span>
-                  <span className="text-sm font-medium text-gray-500">
+                  <span className="font-bold text-gray-700 dark:text-gray-200">Split Details</span>
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Remains: Rp {Number(Math.max(0, totalCart - splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0))).toLocaleString('id-ID')}
                   </span>
                 </div>
@@ -1302,7 +1301,7 @@ function POS() {
                         newSplit[idx].method = e.target.value;
                         setSplitPayments(newSplit);
                       }}
-                      className="flex-1 p-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500"
+                      className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500"
                     >
                       {paymentMethodsList.map(pm => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
                     </select>
@@ -1315,7 +1314,7 @@ function POS() {
                         setSplitPayments(newSplit);
                       }}
                       placeholder="Amount"
-                      className="w-32 p-3 border border-gray-300 rounded-xl outline-none focus:border-blue-500 text-right font-medium"
+                      className="w-32 p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 text-right font-medium"
                     />
                     <button
                       onClick={() => {
@@ -1331,22 +1330,22 @@ function POS() {
                 ))}
                 <button
                   onClick={() => setSplitPayments([...splitPayments, { method: paymentMethodsList[0]?.name || 'Cash', amount: '' }])}
-                  className="w-full py-2 bg-white border border-dashed border-gray-300 rounded-lg text-gray-600 font-bold hover:bg-gray-50 flex justify-center items-center gap-2"
+                  className="w-full py-2 bg-white dark:bg-gray-800 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 font-bold hover:bg-gray-50 dark:bg-gray-900 flex justify-center items-center gap-2"
                 >
                   <Plus size={16} /> Add Payment Method
                 </button>
               </div>}
 
-              {paymentMethod === "Cash" && <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+              {paymentMethod === "Cash" && <div className="space-y-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Cash Received</label>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">Cash Received</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">Rp</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-bold">Rp</span>
                       <input
     type="number"
     value={cashAmount}
     onChange={(e) => setCashAmount(e.target.value)}
-    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold"
+    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold"
     placeholder="0"
   />
                     </div>
@@ -1357,9 +1356,9 @@ function POS() {
                     </div>}
                 </div>}
 
-              {paymentMethod === "QRIS" && <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
+              {paymentMethod === "QRIS" && <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900">
                   <div className="text-center">
-                    <p className="text-gray-600 font-medium mb-4">Please ask customer to scan your store's QRIS.</p>
+                    <p className="text-gray-600 dark:text-gray-300 font-medium mb-4">Please ask customer to scan your store's QRIS.</p>
                     <div className="inline-flex items-center space-x-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-bold text-sm">
                       <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
                       <span>Confirm payment when received...</span>
@@ -1368,7 +1367,7 @@ function POS() {
                 </div>}
             </div>
 
-            <div className="p-4 border-t bg-gray-50">
+            <div className="p-4 border-t bg-gray-50 dark:bg-gray-900">
               <button
     onClick={processPayment}
     disabled={isProcessing || !getSufficientPayment()}

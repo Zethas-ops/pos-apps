@@ -1,52 +1,37 @@
-import fs from 'fs';
-import path from 'path';
-import { transformSync } from 'esbuild';
+const fs = require('fs');
+const path = require('path');
 
-function walkDir(dir, callback) {
+const directoryPath = path.join(__dirname, 'frontend/src/pages');
+
+function walk(dir, callback) {
   fs.readdirSync(dir).forEach(f => {
     let dirPath = path.join(dir, f);
     let isDirectory = fs.statSync(dirPath).isDirectory();
-    if (isDirectory) {
-      if (f !== 'node_modules' && f !== 'dist' && f !== '.git') {
-        walkDir(dirPath, callback);
-      }
-    } else {
-      callback(path.join(dir, f));
-    }
+    isDirectory ? walk(dirPath, callback) : callback(path.join(dir, f));
   });
 }
 
-const rootDir = process.cwd();
+walk(directoryPath, function(filePath) {
+  if (filePath.endsWith('.jsx') || filePath.endsWith('.tsx') || filePath.endsWith('.js')) {
+    let contents = fs.readFileSync(filePath, 'utf8');
+    let original = contents;
+    
+    // Replace classNames with text-gray-800 to have dark:text-gray-100
+    // and text-gray-900 to have dark:text-white
+    contents = contents.replace(/text-gray-800(?! dark:)/g, "text-gray-800 dark:text-gray-100");
+    contents = contents.replace(/text-gray-900(?! dark:)/g, "text-gray-900 dark:text-white");
+    contents = contents.replace(/text-gray-700(?! dark:)/g, "text-gray-700 dark:text-gray-200");
+    contents = contents.replace(/bg-white(?! dark:)/g, "bg-white dark:bg-gray-800");
+    contents = contents.replace(/bg-gray-50(?! dark:)/g, "bg-gray-50 dark:bg-gray-900");
+    contents = contents.replace(/bg-gray-100(?! dark:)/g, "bg-gray-100 dark:bg-gray-700");
+    contents = contents.replace(/bg-gray-200(?! dark:)/g, "bg-gray-200 dark:bg-gray-600");
+    
+    // Borders
+    contents = contents.replace(/border-gray-200(?! dark:)/g, "border-gray-200 dark:border-gray-700");
 
-walkDir(rootDir, (filePath) => {
-  if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
-    if (filePath.includes('vite.config.ts') || filePath.includes('server.ts') || filePath.includes('src') || filePath.includes('server')) {
-      const ext = path.extname(filePath);
-      const isTsx = ext === '.tsx';
-      const newExt = isTsx ? '.jsx' : '.js';
-      const newFilePath = filePath.slice(0, -ext.length) + newExt;
-      
-      const content = fs.readFileSync(filePath, 'utf8');
-      
-      try {
-        let result = transformSync(content, {
-          loader: isTsx ? 'tsx' : 'ts',
-          format: 'esm',
-          target: 'esnext',
-          jsx: 'preserve'
-        });
-        
-        let code = result.code;
-        code = code.replace(/\.tsx?(['"])/g, (match, p1) => {
-          return match.includes('x') ? `.jsx${p1}` : `.js${p1}`;
-        });
-        
-        fs.writeFileSync(newFilePath, code);
-        fs.unlinkSync(filePath);
-        console.log(`Converted ${filePath} to ${newFilePath}`);
-      } catch (e) {
-        console.error(`Failed to convert ${filePath}:`, e);
-      }
+    if (contents !== original) {
+      fs.writeFileSync(filePath, contents, 'utf8');
+      console.log(`Updated ${filePath}`);
     }
   }
 });
