@@ -185,7 +185,7 @@ function POS() {
       });
       setCart(newCart);
     }
-  }, [cart, promos, menu]);
+  }, [cart, promos, menu, selectedPromoId]);
   const fetchData = async () => {
     try {
       const [menuRes, profileRes, promoRes, recipesRes, ingredientsRes, addonsRes, settingsRes, paymentMethodsRes] = await Promise.all([
@@ -1289,9 +1289,14 @@ function POS() {
               {paymentMethod === "Split Payment" && <div className="space-y-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-bold text-gray-700 dark:text-gray-200">Split Details</span>
+                  <div className="flex flex-col items-end">
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     Remains: Rp {Number(Math.max(0, totalCart - splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0))).toLocaleString('id-ID')}
                   </span>
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Change: Rp {Number(Math.max(0, splitPayments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0) - totalCart)).toLocaleString('id-ID')}
+                    </span>
+                  </div>
                 </div>
                 {splitPayments.map((sp, idx) => (
                   <div key={idx} className="flex space-x-2 items-center">

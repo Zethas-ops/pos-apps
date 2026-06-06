@@ -167,8 +167,8 @@ function Promo() {
       free_menu_id: promo.free_menu_id || "",
       min_nominal: promo.min_nominal || "",
       promo_rule: promo.promo_rule || "",
-      start_date: promo.start_date,
-      end_date: promo.end_date,
+      start_date: promo.start_date ? moment.utc(promo.start_date).tz(TIMEZONE).format('YYYY-MM-DD') : "",
+      end_date: promo.end_date ? moment.utc(promo.end_date).tz(TIMEZONE).format('YYYY-MM-DD') : "",
       day_filter: promo.day_filter || "All Days",
       time_filter: isCustomTime ? "Custom Time" : promo.time_filter || "All Day",
       custom_start_time: customStart,
@@ -281,7 +281,7 @@ function Promo() {
     /* Add Modal */
   }
       {showModal && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-700 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-gray-300">Create Promotion</h2>
             </div>
@@ -323,7 +323,7 @@ function Promo() {
     max="100"
     value={formData.discount_percent}
     onChange={(e) => setFormData({ ...formData, discount_percent: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 15"
   />
                 </div> : formData.type === "MIN_BUY_FREE" ? <div className="grid grid-cols-2 gap-6">
@@ -333,7 +333,7 @@ function Promo() {
     required
     value={formData.min_buy_menu_id}
     onChange={(e) => setFormData({ ...formData, min_buy_menu_id: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
                       <option value="">Select Menu</option>
                       {menu.map((m) => <option key={m.menu_id} value={m.menu_id}>{m.name}</option>)}
@@ -347,7 +347,7 @@ function Promo() {
     min="1"
     value={formData.min_buy_qty}
     onChange={(e) => setFormData({ ...formData, min_buy_qty: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 2"
   />
                   </div>
@@ -357,7 +357,7 @@ function Promo() {
     required
     value={formData.free_menu_id}
     onChange={(e) => setFormData({ ...formData, free_menu_id: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
                       <option value="">Select Menu</option>
                       {menu.map((m) => <option key={m.menu_id} value={m.menu_id}>{m.name}</option>)}
@@ -371,7 +371,7 @@ function Promo() {
     min="1"
     value={formData.free_qty}
     onChange={(e) => setFormData({ ...formData, free_qty: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 1"
   />
                   </div>
@@ -381,7 +381,7 @@ function Promo() {
                     <select
     value={formData.min_buy_menu_id}
     onChange={(e) => setFormData({ ...formData, min_buy_menu_id: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
                       <option value="">Any Menu</option>
                       {menu.map((m) => <option key={m.menu_id} value={m.menu_id}>{m.name}</option>)}
@@ -395,7 +395,7 @@ function Promo() {
     min="1"
     value={formData.min_buy_qty}
     onChange={(e) => setFormData({ ...formData, min_buy_qty: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 2"
   />
                   </div>
@@ -404,7 +404,7 @@ function Promo() {
                     <select
     value={formData.free_menu_id}
     onChange={(e) => setFormData({ ...formData, free_menu_id: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
                       <option value="">Any Menu</option>
                       {menu.map((m) => <option key={m.menu_id} value={m.menu_id}>{m.name}</option>)}
@@ -417,7 +417,7 @@ function Promo() {
     min="1"
     value={formData.free_qty}
     onChange={(e) => setFormData({ ...formData, free_qty: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 1"
   />
                   </div>
@@ -428,7 +428,7 @@ function Promo() {
     min="1"
     value={formData.discount_amount}
     onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value, discount_percent: "" })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 10000"
   />
                   </div>
@@ -440,7 +440,7 @@ function Promo() {
     max="100"
     value={formData.discount_percent}
     onChange={(e) => setFormData({ ...formData, discount_percent: e.target.value, discount_amount: "" })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 15"
   />
                   </div>
@@ -461,8 +461,9 @@ function Promo() {
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Free Menu (Optional)</label>
                     <select
     value={formData.free_menu_id}
-    onChange={(e) => setFormData({ ...formData, free_menu_id: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    onChange={(e) => setFormData({ ...formData, free_menu_id: e.target.value, discount_amount: "", discount_percent: "" })}
+    disabled={!!formData.discount_amount || !!formData.discount_percent}
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
                       <option value="">None</option>
                       {menu.map((m) => <option key={m.menu_id} value={m.menu_id}>{m.name}</option>)}
@@ -474,8 +475,9 @@ function Promo() {
     type="number"
     min="1"
     value={formData.discount_amount}
-    onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value, discount_percent: "" })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    onChange={(e) => setFormData({ ...formData, discount_amount: e.target.value, discount_percent: "", free_menu_id: "" })}
+    disabled={!!formData.free_menu_id || !!formData.discount_percent}
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 10000"
   />
                   </div>
@@ -486,8 +488,9 @@ function Promo() {
     min="1"
     max="100"
     value={formData.discount_percent}
-    onChange={(e) => setFormData({ ...formData, discount_percent: e.target.value, discount_amount: "" })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    onChange={(e) => setFormData({ ...formData, discount_percent: e.target.value, discount_amount: "", free_menu_id: "" })}
+    disabled={!!formData.free_menu_id || !!formData.discount_amount}
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
     placeholder="e.g., 15"
   />
                   </div>
@@ -501,7 +504,7 @@ function Promo() {
     type="date"
     value={formData.start_date}
     onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
                 </div>
                 <div>
@@ -511,7 +514,7 @@ function Promo() {
     type="date"
     value={formData.end_date}
     onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
                 </div>
               </div>
@@ -522,7 +525,7 @@ function Promo() {
                   <select
     value={formData.day_filter}
     onChange={(e) => setFormData({ ...formData, day_filter: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
                     <option value="All Days">All Days</option>
                     <option value="Weekdays">Weekdays</option>
@@ -541,7 +544,7 @@ function Promo() {
                   <select
     value={formData.time_filter}
     onChange={(e) => setFormData({ ...formData, time_filter: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   >
                     <option value="All Day">All Day</option>
                     <option value="Morning (06:00 - 12:00)">Morning (06:00 - 12:00)</option>
@@ -560,7 +563,7 @@ function Promo() {
     type="time"
     value={formData.custom_start_time}
     onChange={(e) => setFormData({ ...formData, custom_start_time: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
                   </div>
                   <div>
@@ -570,7 +573,7 @@ function Promo() {
     type="time"
     value={formData.custom_end_time}
     onChange={(e) => setFormData({ ...formData, custom_end_time: e.target.value })}
-    className="w-full p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+    className="w-full p-3 rounded-xl border border-gray-300 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
   />
                   </div>
                 </div>}
@@ -579,7 +582,7 @@ function Promo() {
                 <button
     type="button"
     onClick={() => setShowModal(false)}
-    className="px-6 py-3 font-bold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors"
+    className="px-6 py-3 font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
   >
                   Cancel
                 </button>
