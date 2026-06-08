@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Edit, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import moment from "moment-timezone";
 import { supabase } from "../lib/supabase";
 
 const TIMEZONE = 'Asia/Jakarta';
@@ -39,8 +38,12 @@ function OpenBills() {
   const handleClose = (bill) => {
     navigate("/pos", { state: { bill, action: "close" } });
   };
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "";
+    return moment.utc(timeStr).tz(TIMEZONE).format("HH:mm:ss");
+  };
   const filteredBills = bills.filter(
-    (b) => b.customer_name.toLowerCase().includes(search.toLowerCase()) || b.table_no.toString().includes(search)
+    (b) => b.customer_name.toLowerCase().includes(search.toLowerCase()) || b.table_no.toString().split('|PROMO:')[0].includes(search)
   );
   return <div className="p-8 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -64,10 +67,10 @@ function OpenBills() {
               <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
                 <div>
                   <h3 className="font-bold text-gray-800 text-lg">{bill.customer_name}</h3>
-                  <p className="text-sm text-gray-500 font-medium">Table {bill.table_no}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Table {bill.table_no.split('|PROMO:')[0]}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-400 font-medium">{format(toZonedTime(new Date(bill.created_at), TIMEZONE), "HH:mm:ss")}</p>
+                  <p className="text-xs text-gray-400 font-medium">{formatTime(bill.created_time || bill.created_at)}</p>
                   <p className="font-black text-blue-600">Rp {total.toLocaleString("id-ID")}</p>
                 </div>
               </div>

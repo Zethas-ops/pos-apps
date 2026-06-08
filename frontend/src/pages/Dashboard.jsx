@@ -175,7 +175,10 @@ function Dashboard() {
       filteredTxns.forEach(t => {
         if (t.transaction_items) {
           t.transaction_items.forEach(item => {
-            const name = item.menu_name;
+            let name = item.menu_name;
+            if (name.includes(' (Note:')) {
+              name = name.split(' (Note:')[0];
+            }
             if (!itemSales[name]) itemSales[name] = { sold: 0, revenue: 0 };
             itemSales[name].sold += Number(item.qty);
             itemSales[name].revenue += Number(item.subtotal);

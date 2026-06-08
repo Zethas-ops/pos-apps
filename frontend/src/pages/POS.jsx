@@ -55,9 +55,16 @@ function POS() {
   useEffect(() => {
     if (location.state?.bill) {
       const bill = location.state.bill;
-      setTableNo(bill.table_no);
+      let loadTableNo = bill.table_no;
+      if (loadTableNo && loadTableNo.includes('|PROMO:')) {
+        const parts = loadTableNo.split('|PROMO:');
+        loadTableNo = parts[0];
+        setSelectedPromoId(parts[1]);
+      }
+      setTableNo(loadTableNo);
       setCustomerName(bill.customer_name);
       setOpenBillId(bill.bill_id);
+      
       const parsedItems = bill.items.map((item) => {
         let parsedAddons = [];
         if (typeof item.addons === "string") {
@@ -442,7 +449,7 @@ function POS() {
       maxQty: getMaxAllowedQty()
     };
     const existingIndex = cart.findIndex(
-      (item) => item.menu_id === newItem.menu_id && item.drink_type === newItem.drink_type && item.sugar_level === newItem.sugar_level && JSON.stringify(item.addons) === JSON.stringify(newItem.addons) && (item.note || "") === newItem.note
+      (item) => item.menu_id === newItem.menu_id && item.drink_type === newItem.drink_type && item.sugar_level === newItem.sugar_level && JSON.stringify(item.addons) === JSON.stringify(newItem.addons) && (item.note || "") === newItem.note && !(item.is_auto_free)
     );
     if (existingIndex >= 0) {
       const newCart = [...cart];
@@ -820,18 +827,19 @@ function POS() {
       let billId = openBillId;
       const actualCustomerName = customerName || "Guest";
       const finalCustomerName = transactionNote ? `${actualCustomerName} - Note: ${transactionNote}` : actualCustomerName;
-      
+      const finalTableNo = selectedPromoId ? `${tableNo}|PROMO:${selectedPromoId}` : tableNo;
+
       if (openBillId) {
         // Update existing open bill
         const { error: updateError } = await supabase
           .from('open_bills')
           .update({
-            table_no: tableNo,
+            table_no: finalTableNo,
             customer_name: finalCustomerName,
             subtotal: totals.subtotal,
             tax: totals.tax,
             discount: totals.discount,
-            total_price: totals.total
+            total_price: totals.total,
           })
           .eq('bill_id', openBillId);
           
@@ -844,7 +852,7 @@ function POS() {
         const { data: newBill, error: insertError } = await supabase
           .from('open_bills')
           .insert([{
-            table_no: tableNo,
+            table_no: finalTableNo,
             customer_name: finalCustomerName,
             subtotal: totals.subtotal,
             tax: totals.tax,
