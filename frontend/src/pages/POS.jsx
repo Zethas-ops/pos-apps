@@ -147,17 +147,39 @@ function POS() {
         }
       }
     }
+        
+    // Cap requiredFreeItems by available stock using nonFreeCart
+    let cappedFreeItems = {};
+    const tempCart = [...nonFreeCart]; // Simulate adding free items to evaluate stock
+    Object.keys(requiredFreeItems).forEach(menuIdStr => {
+      const menuId = parseInt(menuIdStr);
+      const menuItem = menu.find(m => m.menu_id === menuId);
+      if (menuItem) {
+        const availableQty = getMenuMaxQty(menuItem, tempCart);
+        const cappedQty = Math.min(requiredFreeItems[menuId], availableQty);
+        if (cappedQty > 0) {
+          cappedFreeItems[menuIdStr] = cappedQty;
+          // Add to tempCart so subsequent free items take stock into account properly if they share ingredients
+          tempCart.push({
+            menu_id: menuItem.menu_id,
+            qty: cappedQty
+          });
+        }
+      }
+    });
+
     const currentAutoFreeItems = cart.filter((item) => item.is_auto_free);
     const currentAutoMap = {};
     currentAutoFreeItems.forEach((item) => {
       currentAutoMap[item.menu_id] = (currentAutoMap[item.menu_id] || 0) + item.qty;
     });
+
     let isDifferent = false;
-    if (Object.keys(requiredFreeItems).length !== Object.keys(currentAutoMap).length) {
+    if (Object.keys(cappedFreeItems).length !== Object.keys(currentAutoMap).length) {
       isDifferent = true;
     } else {
-      for (const key in requiredFreeItems) {
-        if (requiredFreeItems[key] !== currentAutoMap[key]) {
+      for (const key in cappedFreeItems) {
+        if (cappedFreeItems[key] !== currentAutoMap[key]) {
           isDifferent = true;
           break;
         }
@@ -165,9 +187,9 @@ function POS() {
     }
     if (isDifferent) {
       const newCart = [...nonFreeCart];
-      Object.keys(requiredFreeItems).forEach((menuIdStr) => {
+      Object.keys(cappedFreeItems).forEach((menuIdStr) => {
         const menuId = parseInt(menuIdStr);
-        const qty2 = requiredFreeItems[menuId];
+        const qty2 = cappedFreeItems[menuId];
         const menuItem = menu.find((m) => m.menu_id === menuId);
         if (menuItem) {
           newCart.push({
@@ -297,9 +319,9 @@ function POS() {
     setItemNote("");
     setShowOptions(true);
   };
-  const getCartIngredientUsage = () => {
+  const getCartIngredientUsage = (cartItems = cart) => {
     const usage = {};
-    for (const item of cart) {
+    for (const item of cartItems) {
       const menuItem = menu.find(m => m.menu_id === item.menu_id);
       if (menuItem && menuItem.recipes) {
         for (const r of menuItem.recipes) {
@@ -871,8 +893,8 @@ function POS() {
       isProcessingRef.current = false;
     }
   };
-  const getMenuMaxQty = (menuItem) => {
-    const cartUsage = getCartIngredientUsage();
+  const getMenuMaxQty = (menuItem, cartItems = cart) => {
+    const cartUsage = getCartIngredientUsage(cartItems);
     let minQty = Infinity;
     if (menuItem.recipes && menuItem.recipes.length > 0) {
       for (const r of menuItem.recipes) {
@@ -1312,15 +1334,16 @@ function POS() {
                       {paymentMethodsList.map(pm => <option key={pm.id} value={pm.name}>{pm.name}</option>)}
                     </select>
                     <input
-                      type="number"
-                      value={sp.amount}
+                      type="text"
+                      value={sp.amount ? Number(sp.amount).toLocaleString('id-ID') : ''}
                       onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
                         const newSplit = [...splitPayments];
-                        newSplit[idx].amount = e.target.value;
+                        newSplit[idx].amount = val;
                         setSplitPayments(newSplit);
                       }}
                       placeholder="Amount"
-                      className="w-32 p-3 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 text-right font-medium"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 text-right font-medium"
                     />
                     <button
                       onClick={() => {
@@ -1348,9 +1371,12 @@ function POS() {
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-bold">Rp</span>
                       <input
-    type="number"
-    value={cashAmount}
-    onChange={(e) => setCashAmount(e.target.value)}
+    type="text"
+    value={cashAmount ? Number(cashAmount).toLocaleString('id-ID') : ''}
+    onChange={(e) => {
+      const val = e.target.value.replace(/\D/g, "");
+      setCashAmount(val);
+    }}
     className="w-full pl-12 pr-4 py-3 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold"
     placeholder="0"
   />

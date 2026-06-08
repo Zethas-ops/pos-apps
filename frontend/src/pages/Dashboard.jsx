@@ -26,9 +26,22 @@ function Dashboard() {
   const [startDate, setStartDate] = useState(initZonedNow.clone().subtract(6, 'days').format("YYYY-MM-DD"));
   const [endDate, setEndDate] = useState(initZonedNow.format("YYYY-MM-DD"));
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentOptions, setPaymentOptions] = useState([]);
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
   const isAdmin = user?.role === "ADMIN";
+    
+  useEffect(() => {
+    const fetchOptions = async () => {
+            const { data, error } = await supabase.from('payment_methods').select('name').eq('is_active', true).order('id');
+      if (data) {
+        setPaymentOptions(data.map(d => d.name));
+        } else {
+        console.error("Error fetching payment methods:", error);
+      }
+    };
+    fetchOptions();
+  }, []);
   
   const fetchDashboard = async () => {
     try {
@@ -438,10 +451,9 @@ function Dashboard() {
     className="bg-transparent text-sm font-medium text-gray-700 outline-none px-2 py-1 cursor-pointer"
   >
               <option value="">All Payments</option>
-              <option value="Cash">Cash</option>
-              <option value="QRIS">QRIS</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-              <option value="Debit / Credit Card">Debit / Credit Card</option>
+              {paymentOptions.map((opt, i) => (
+                <option key={i} value={opt}>{opt}</option>
+              ))}
             </select>
             
             <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
@@ -483,7 +495,7 @@ function Dashboard() {
                 </div>
                 <button
     onClick={handleApplyFilter}
-    className="bg-blue-50 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
+    className="bg-blue-300 hover:bg-blue-600 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-colors ml-1"
   >
                   Apply
                 </button>

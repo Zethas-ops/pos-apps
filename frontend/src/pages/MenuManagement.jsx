@@ -168,21 +168,27 @@ function MenuManagement() {
       alert("Error deleting menu: " + err.message);
     }
   };
-  const handleDeleteCategory = async (categoryToDelete) => {
-    if (window.confirm(`Are you sure you want to delete the category "${categoryToDelete}"? All menu items in this category will be moved to "Uncategorized".`)) {
+  const [deleteCategoryName, setDeleteCategoryName] = useState(null);
+
+  const handleDeleteCategory = (categoryToDelete) => {
+    setDeleteCategoryName(categoryToDelete);
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!deleteCategoryName) return;
       try {
         const { error } = await supabase
           .from('menu')
           .update({ category: 'Uncategorized' })
-          .eq('category', categoryToDelete);
+          .eq('category', deleteCategoryName);
         
         if (error) throw error;
+        setDeleteCategoryName(null);
         fetchData();
       } catch (err) {
         alert("Error deleting category: " + err.message);
       }
-    }
-  };
+    };
   const handleEdit = (item) => {
     setEditId(item.menu_id);
     setShowNewCategoryInput(false);
@@ -583,6 +589,31 @@ function MenuManagement() {
                   <p className="text-center text-gray-500 py-4">No categories found.</p>
                 )}
               </div>
+            </div>
+          </div>
+        </div>}
+        
+      {deleteCategoryName && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-6 border-b bg-gray-50 dark:bg-gray-900">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Confirm Deletion</h2>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-600 dark:text-gray-300">Are you sure you want to delete the category "{deleteCategoryName}"? All menu items in this category will be moved to "Uncategorized".</p>
+            </div>
+            <div className="p-6 border-t bg-gray-50 dark:bg-gray-900 flex justify-end space-x-3">
+              <button
+                onClick={() => setDeleteCategoryName(null)}
+                className="px-6 py-3 font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-600 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteCategory}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-md shadow-red-200"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>}

@@ -72,14 +72,20 @@ function RoleManagement() {
       setError("An error occurred while saving");
     }
   };
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+   const [deleteId, setDeleteId] = useState(null);
+
+  const handleDelete = (id) => {
+    setDeleteId(id);
+  };
+  const confirmDelete = async () => {
+    if (!deleteId) return;
     try {
-      const { error } = await supabase.from('users').delete().eq('id', id);
+      const { error } = await supabase.from('users').delete().eq('id', deleteId);
       if (error) {
         alert(error.message || "Failed to delete user");
       } else {
         fetchUsers();
+        setDeleteId(null);
       }
     } catch (error2) {
       console.error("Error deleting user:", error2);
@@ -293,6 +299,32 @@ function RoleManagement() {
             </form>
           </div>
         </div>}
+        
+      {deleteId && <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-6 border-b bg-gray-50 dark:bg-gray-900">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Confirm Deletion</h2>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-600 dark:text-gray-300">Are you sure you want to delete this user? This action cannot be undone.</p>
+            </div>
+            <div className="p-6 border-t bg-gray-50 dark:bg-gray-900 flex justify-end space-x-3">
+              <button
+                onClick={() => setDeleteId(null)}
+                className="px-6 py-3 font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:bg-gray-600 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-md shadow-red-200"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>}
+
     </div>;
 }
 export {
