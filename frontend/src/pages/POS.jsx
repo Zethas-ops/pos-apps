@@ -1343,7 +1343,7 @@ function POS() {
                         setSplitPayments(newSplit);
                       }}
                       placeholder="Amount"
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 text-right font-medium"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl outline-none focus:border-blue-500 dark:text-gray-200 text-right font-medium"
                     />
                     <button
                       onClick={() => {
