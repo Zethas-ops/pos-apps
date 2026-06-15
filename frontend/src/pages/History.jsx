@@ -85,6 +85,7 @@ function History() {
     
     try {
       await printViaBluetooth(receiptText);
+      alert("Receipt printed successfully!");
     } catch (err) {
       console.error("Bluetooth print failed:", err);
       alert("Bluetooth print failed or was cancelled.");
