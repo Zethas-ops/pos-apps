@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Search, Printer, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import moment from "moment-timezone";
 import { supabase } from "../lib/supabase";
+import { printViaBluetooth, formatReceiptText } from "../utils/printer";
 
 const TIMEZONE = 'Asia/Jakarta';
 
@@ -63,102 +64,31 @@ function History() {
       console.error("Error fetching history:", err);
     }
   };
-  const handleReprint = (transaction) => {
-    const receiptContent = `
-      <html>
-        <head>
-          <title>Invoice #${transaction.invoice_no || transaction.transaction_id}</title>
-          <style>
-            body { font-family: monospace; width: 300px; margin: 0 auto; padding: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .header h1 { margin: 0; font-size: 24px; }
-            .header p { margin: 5px 0; font-size: 12px; }
-            .divider { border-top: 1px dashed #000; margin: 10px 0; }
-            .item { display: flex; justify-content: space-between; margin: 5px 0; font-size: 14px; }
-            .item-name { flex: 1; }
-            .item-qty { width: 30px; text-align: right; }
-            .item-price { width: 80px; text-align: right; }
-            .total { font-weight: bold; font-size: 16px; margin-top: 10px; }
-            .footer { text-align: center; margin-top: 20px; font-size: 12px; }
-            @media print {
-              body { width: 100%; margin: 0; padding: 0; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>${storeProfile?.store_name || "Coffee Shop"}</h1>
-            <p>${storeProfile?.address || "Address"}</p>
-            <p>${storeProfile?.phone || "Phone"}</p>
-            <div class="divider"></div>
-            <p>Invoice #${transaction.invoice_no || transaction.transaction_id}</p>
-            <p>${moment.utc(transaction.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</p>
-            <p>Customer: ${transaction.customer_name} | Table: ${transaction.table_no}</p>
-          </div>
-          <div class="divider"></div>
-          ${transaction.items.map((item) => `
-            <div class="item">
-              <div class="item-name">
-                ${item.menu_name} ${item.drink_type ? `(${item.drink_type})` : ""}
-                ${item.addons && item.addons.length > 0 ? `<br><small>+ ${item.addons.map((a) => a.name).join(", ")}</small>` : ""}
-              </div>
-              <div class="item-qty">x${item.qty}</div>
-              <div class="item-price">Rp ${Number(item.subtotal || 0).toLocaleString("id-ID")}</div>
-            </div>
-          `).join("")}
-          <div class="divider"></div>
-          <div class="item">
-            <span>Subtotal</span>
-            <span>Rp ${Number(transaction.subtotal || 0).toLocaleString("id-ID")}</span>
-          </div>
-          ${Number(transaction.discount || 0) > 0 ? `
-          <div class="item">
-            <span>Discount</span>
-            <span>-Rp ${Number(transaction.discount || 0).toLocaleString("id-ID")}</span>
-          </div>
-          ` : ""}
-          <div class="item">
-            <span>PPN 11%</span>
-            <span>Rp ${Number(transaction.tax || 0).toLocaleString("id-ID")}</span>
-          </div>
-          <div class="item total">
-            <span>Total Payment</span>
-            <span>Rp ${Number(transaction.total_price || 0).toLocaleString("id-ID")}</span>
-          </div>
-          <div class="divider"></div>
-          ${transaction.payment_method === "Cash" ? `
-          <div class="item">
-            <span>Amount Cash</span>
-            <span>Rp ${Number(transaction.cash_amount || 0).toLocaleString("id-ID")}</span>
-          </div>
-          <div class="item">
-            <span>Change</span>
-            <span>Rp ${Number(transaction.change_amount || 0).toLocaleString("id-ID")}</span>
-          </div>
-          ` : ""}
-          <div class="item">
-            <span>Payment Method</span>
-            <span>${transaction.payment_method}</span>
-          </div>
-          <div class="footer">
-            <p>*** THANK YOU ***</p>
-          </div>
-        </body>
-      </html>
-    `;
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    iframe.contentWindow.document.open();
-    iframe.contentWindow.document.write(receiptContent);
-    iframe.contentWindow.document.close();
+  const handleReprint = async (transaction) => {
+    const txDataConfig = {
+      invoice_no: transaction.invoice_no || transaction.transaction_id,
+      date: moment.utc(transaction.date).tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss"),
+      customer_name: transaction.customer_name,
+      table_no: transaction.table_no,
+      payment_method: transaction.payment_method,
+      cash_amount: transaction.cash_amount,
+      change_amount: transaction.change_amount
+    };
+    const totals = {
+      subtotal: transaction.subtotal,
+      tax: transaction.tax,
+      discount: transaction.discount,
+      total: transaction.total_price
+    };
     
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
+    const receiptText = formatReceiptText(storeProfile, txDataConfig, transaction.items, totals);
     
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 1000);
+    try {
+      await printViaBluetooth(receiptText);
+    } catch (err) {
+      console.error("Bluetooth print failed:", err);
+      alert("Bluetooth print failed or was cancelled.");
+    }
   };
   const transactionsWithInvoice = React.useMemo(() => {
     // Group all transactions by local date string

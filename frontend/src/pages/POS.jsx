@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Plus, Minus, Trash2, Search, X, Check, ShoppingBag } from "lucide-react";
 import { clsx } from "clsx";
 import { useLocation } from "react-router-dom";
 import moment from "moment-timezone";
 import { supabase } from "../lib/supabase";
+import { printViaBluetooth, formatReceiptText } from "../utils/printer";
 
 const TIMEZONE = 'Asia/Jakarta';
 
@@ -688,101 +689,25 @@ function POS() {
       const seqPart = String(Math.max(0, dayIndex) + 1).padStart(3, '0');
       const invoiceNo = `${datePart}${seqPart}`;
 
-      const receiptContent = `
-        <html>
-          <head>
-            <title>Invoice #${invoiceNo}</title>
-            <style>
-              body { font-family: monospace; width: 300px; margin: 0 auto; padding: 20px; }
-              .header { text-align: center; margin-bottom: 20px; }
-              .header h1 { margin: 0; font-size: 24px; }
-              .header p { margin: 5px 0; font-size: 12px; }
-              .divider { border-top: 1px dashed #000; margin: 10px 0; }
-              .item { display: flex; justify-content: space-between; margin: 5px 0; font-size: 14px; }
-              .item-name { flex: 1; }
-              .item-qty { width: 30px; text-align: right; }
-              .item-price { width: 80px; text-align: right; }
-              .total { font-weight: bold; font-size: 16px; margin-top: 10px; }
-              .footer { text-align: center; margin-top: 20px; font-size: 12px; }
-              @media print {
-                body { width: 100%; margin: 0; padding: 0; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1>${storeProfile?.store_name || "Coffee Shop"}</h1>
-              <p>${storeProfile?.address || "Address"}</p>
-              <p>${storeProfile?.phone || "Phone"}</p>
-              <div class="divider"></div>
-              <p>Invoice #${invoiceNo}</p>
-              <p>${moment().tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss")}</p>
-              <p>Customer: ${customerName} | Order Type: ${tableNo}</p>
-            </div>
-            <div class="divider"></div>
-            ${cart.map((item) => `
-              <div class="item">
-                <div class="item-name">
-                  ${item.menu_name} ${item.drink_type ? `(${item.drink_type})` : ""}
-                  ${item.addons && item.addons.length > 0 ? `<br><small>+ ${item.addons.map((a) => a.name).join(", ")}</small>` : ""}
-                </div>
-                <div class="item-qty">x${item.qty}</div>
-                <div class="item-price">Rp ${Number(item.subtotal || 0).toLocaleString("id-ID")}</div>
-              </div>
-            `).join("")}
-            <div class="divider"></div>
-            <div class="item">
-              <span>Subtotal</span>
-              <span>Rp ${Number(totals.subtotal || 0).toLocaleString("id-ID")}</span>
-            </div>
-            ${totals.discount > 0 ? `
-            <div class="item">
-              <span>Discount</span>
-              <span>-Rp ${Number(totals.discount || 0).toLocaleString("id-ID")}</span>
-            </div>
-            ` : ""}
-            <div class="item">
-              <span>PPN 11%</span>
-              <span>Rp ${Number(totals.tax || 0).toLocaleString("id-ID")}</span>
-            </div>
-            <div class="item total">
-              <span>Total Payment</span>
-              <span>Rp ${Number(totals.total || 0).toLocaleString("id-ID")}</span>
-            </div>
-            <div class="divider"></div>
-            ${paymentMethod === "Cash" || paymentMethod === "Split Payment" ? `
-            <div class="item">
-              <span>Amount Paid</span>
-              <span>Rp ${Number(finalCash).toLocaleString("id-ID")}</span>
-            </div>
-            <div class="item">
-              <span>Change</span>
-              <span>Rp ${Number(finalChange).toLocaleString("id-ID")}</span>
-            </div>
-            ` : ""}
-            <div class="item">
-              <span>Payment</span>
-              <span>${finalPaymentMethod}</span>
-            </div>
-            <div class="footer">
-              <p>*** THANK YOU ***</p>
-            </div>
-          </body>
-        </html>
-      `;
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-      iframe.contentWindow.document.open();
-      iframe.contentWindow.document.write(receiptContent);
-      iframe.contentWindow.document.close();
-      
-      // Removed window.print() so no popup confirmation displays
-      
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
-      alert("Payment successful!");
+      const txDataConfig = {
+        invoice_no: invoiceNo,
+        date: moment().tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss"),
+        customer_name: customerName,
+        table_no: tableNo,
+        payment_method: finalPaymentMethod,
+        cash_amount: finalCash,
+        change_amount: finalChange
+      };
+
+      const receiptText = formatReceiptText(storeProfile, txDataConfig, cart, totals);
+      try {
+        await printViaBluetooth(receiptText);
+        alert("Payment & Print successful!");
+      } catch (err) {
+        console.error("Bluetooth print failed:", err);
+        alert("Payment successful! (Bluetooth print failed/cancelled)");
+      }
+
       setCart([]);
       setTableNo("");
       setCustomerName("");
