@@ -82,12 +82,16 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
   return text;
 };
 
+let cachedDevice = null;
+let cachedCharacteristic = null;
+
 export const printViaBluetooth = async (textToPrint) => {
   if (!navigator.bluetooth) {
     throw new Error("Web Bluetooth API is not supported in this browser.");
   }
 
   try {
+     if (!cachedDevice || !cachedDevice.gatt.connected || !cachedCharacteristic) {
     let device;
 
     // Try to get already paired devices first for auto-print
@@ -132,6 +136,10 @@ export const printViaBluetooth = async (textToPrint) => {
       throw new Error("Could not find a writable characteristic on this Bluetooth device.");
     }
 
+      cachedDevice = device;
+      cachedCharacteristic = printCharacteristic;
+}
+
     // Convert text to Esc/POS byte array
     const encoder = new TextEncoder();
     const data = encoder.encode(
@@ -145,10 +153,10 @@ export const printViaBluetooth = async (textToPrint) => {
     const CHUNK_SIZE = 100;
     for (let i = 0; i < data.length; i += CHUNK_SIZE) {
       const chunk = data.slice(i, i + CHUNK_SIZE);
-      if (printCharacteristic.properties.write) {
-         await printCharacteristic.writeValue(chunk);
+      if (cachedCharacteristic.properties.write) {
+         await cachedCharacteristic.writeValue(chunk);
       } else {
-         await printCharacteristic.writeValueWithoutResponse(chunk);
+         await cachedCharacteristic.writeValueWithoutResponse(chunk);
       }
     }
 
@@ -158,6 +166,9 @@ export const printViaBluetooth = async (textToPrint) => {
         throw new Error("Operation cancelled.");
     }
     console.error("Bluetooth print error:", error);
+    // On error, clear cache
+    cachedDevice = null;
+    cachedCharacteristic = null;
     throw error;
   }
 };
