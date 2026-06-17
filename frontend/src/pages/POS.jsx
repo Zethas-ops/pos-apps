@@ -692,7 +692,7 @@ function POS() {
       const txDataConfig = {
         invoice_no: invoiceNo,
         date: moment().tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss"),
-        customer_name: customerName,
+        customer_name: finalcustomerName,
         table_no: tableNo,
         payment_method: finalPaymentMethod,
         cash_amount: finalCash,

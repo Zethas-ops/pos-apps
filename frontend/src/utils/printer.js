@@ -26,11 +26,17 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
   cart.forEach(item => {
     let name = item.menu_name;
     if (item.drink_type) name += ` (${item.drink_type})`;
-    name = name.substring(0, WIDTH); // Simple cutoff
+    
+    // Print item name, allowing it to wrap naturally
     text += name + "\n";
     
     if (item.addons && item.addons.length > 0) {
-      text += ` + ${item.addons.map(a => a.name).join(", ")}`.substring(0, WIDTH) + "\n";
+      text += ` + ${item.addons.map(a => a.name).join(", ")}\n`;
+    }
+    
+    // Print explicit note if it exists and isn't already in menu_name
+    if (item.note && !name.includes(`(Note: ${item.note})`)) {
+      text += ` * Note: ${item.note}\n`;
     }
     
     // Qty x Price     Subtotal
