@@ -48,8 +48,10 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
 
     if (item.drink_type) name += ` (${item.drink_type})`;
     
-    // Print name, handling word wrap if needed, or simple cutoff
+   // Print name in BOLD, handling word wrap if needed, or simple cutoff
+    text += '\x1B\x45\x01'; // Bold on
     text += name.substring(0, WIDTH) + "\n";
+    text += '\x1B\x45\x00'; // Bold off
     
     if (note) {
       text += ` * Note: ${note}`.substring(0, WIDTH) + "\n";
