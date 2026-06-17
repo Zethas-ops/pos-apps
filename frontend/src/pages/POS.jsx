@@ -693,6 +693,7 @@ function POS() {
         invoice_no: invoiceNo,
         date: moment().tz(TIMEZONE).format("YYYY-MM-DD HH:mm:ss"),
         customer_name: customerName,
+        transaction_note: transactionNote,
         table_no: tableNo,
         payment_method: finalPaymentMethod,
         cash_amount: finalCash,
@@ -711,6 +712,7 @@ function POS() {
       setCart([]);
       setTableNo("");
       setCustomerName("");
+      setTransactionNote("");
       setShowPayment(false);
       setCashAmount("");
       setSplitPayments([{ method: paymentMethodsList[0]?.name || 'Cash', amount: '' }]);

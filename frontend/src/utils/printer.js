@@ -16,13 +16,16 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
   text += "-".repeat(WIDTH) + "\n";
   
   let custName = transaction.customer_name || "Guest";
-  let txNote = "";
-  if (custName) {
+  let txNote = transaction.transaction_note || "";
+  if (custName && !txNote) {
     const txNoteMatch = custName.match(/ - Note: ([\s\S]*)$/);
     if (txNoteMatch) {
       txNote = txNoteMatch[1];
       custName = custName.replace(/\s*- Note: [\s\S]*$/, "");
     }
+    } else if (txNote && custName.includes(" - Note: ")) {
+    // Strip it from custName if explicitly provided but also baked in (from POS.jsx)
+    custName = custName.replace(/\s*- Note: [\s\S]*$/, "");
   }
 
   text += '\x1B\x61\x00'; // Left align
