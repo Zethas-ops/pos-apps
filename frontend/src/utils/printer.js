@@ -18,10 +18,10 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
   let custName = transaction.customer_name || "Guest";
   let txNote = "";
   if (custName) {
-    const txNoteMatch = custName.match(/ - Note: (.*)$/);
+    const txNoteMatch = custName.match(/ - Note: ([\s\S]*)$/);
     if (txNoteMatch) {
       txNote = txNoteMatch[1];
-      custName = custName.replace(/\s*- Note: .*$/, "");
+      custName = custName.replace(/\s*- Note: [\s\S]*$/, "");
     }
   }
 
@@ -104,7 +104,7 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
     text += "\n";
     text += `Note: ${txNote}\n`;
   }
-  
+
   text += "-".repeat(WIDTH) + "\n";
   text += '\x1B\x61\x01'; // Center align
   text += "Thank You\n";
