@@ -29,9 +29,6 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
   text += `Inv : #${transaction.invoice_no}\n`;
   text += `Date: ${transaction.date}\n`;
   text += `Cust: ${custName}\n`;
-  if (txNote) {
-    text += `Note: ${txNote.substring(0, WIDTH - 6)}\n`;
-  }
   text += `Type: ${transaction.table_no}\n`;
   text += "-".repeat(WIDTH) + "\n";
 
@@ -102,6 +99,12 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
     text += padRight("Change", WIDTH - changeStr.length) + changeStr + "\n";
   }
 
+  if (txNote) {
+    // Print the note, wrapping if necessary or let natural wrap happen
+    text += "\n";
+    text += `Note: ${txNote}\n`;
+  }
+  
   text += "-".repeat(WIDTH) + "\n";
   text += '\x1B\x61\x01'; // Center align
   text += "Thank You\n";
