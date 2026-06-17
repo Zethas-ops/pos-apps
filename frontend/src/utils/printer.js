@@ -15,28 +15,48 @@ export const formatReceiptText = (storeProfile, transaction, cart, totals) => {
   if (storeProfile?.phone) text += storeProfile.phone + "\n";
   text += "-".repeat(WIDTH) + "\n";
   
+  let custName = transaction.customer_name || "Guest";
+  let txNote = "";
+  if (custName) {
+    const txNoteMatch = custName.match(/ - Note: (.*)$/);
+    if (txNoteMatch) {
+      txNote = txNoteMatch[1];
+      custName = custName.replace(/\s*- Note: .*$/, "");
+    }
+  }
+
   text += '\x1B\x61\x00'; // Left align
   text += `Inv : #${transaction.invoice_no}\n`;
   text += `Date: ${transaction.date}\n`;
-  text += `Cust: ${transaction.customer_name}\n`;
+  text += `Cust: ${custName}\n`;
+  if (txNote) {
+    text += `Note: ${txNote.substring(0, WIDTH - 6)}\n`;
+  }
   text += `Type: ${transaction.table_no}\n`;
   text += "-".repeat(WIDTH) + "\n";
 
   // Items
   cart.forEach(item => {
-    let name = item.menu_name;
+    let name = item.menu_name || "";
+    let note = item.note || "";
+    
+    const noteMatch = name.match(/\(Note: (.*?)\)$/);
+    if (noteMatch) {
+      note = noteMatch[1] || note;
+      name = name.replace(/\s*\(Note: .*?\)$/, "");
+    }
+
     if (item.drink_type) name += ` (${item.drink_type})`;
     
-    // Print item name, allowing it to wrap naturally
-    text += name + "\n";
+    // Print name, handling word wrap if needed, or simple cutoff
+    text += name.substring(0, WIDTH) + "\n";
     
-    if (item.addons && item.addons.length > 0) {
-      text += ` + ${item.addons.map(a => a.name).join(", ")}\n`;
+    if (note) {
+      text += ` * Note: ${note}`.substring(0, WIDTH) + "\n";
     }
-    
-    // Print explicit note if it exists and isn't already in menu_name
-    if (item.note && !name.includes(`(Note: ${item.note})`)) {
-      text += ` * Note: ${item.note}\n`;
+
+    if (item.addons && item.addons.length > 0) {
+      text += ` + ${item.addons.map(a => a.name).join(", ")}`.substring(0, WIDTH) + "\n";
     }
     
     // Qty x Price     Subtotal
@@ -97,54 +117,54 @@ export const printViaBluetooth = async (textToPrint) => {
   }
 
   try {
-     if (!cachedDevice || !cachedDevice.gatt.connected || !cachedCharacteristic) {
-    let device;
+    if (!cachedDevice || !cachedDevice.gatt.connected || !cachedCharacteristic) {
+      let device;
 
-    // Try to get already paired devices first for auto-print
-    if (navigator.bluetooth.getDevices) {
-      const devices = await navigator.bluetooth.getDevices();
-      if (devices.length > 0) {
-        device = devices[0];
-      }
-    }
-
-    // If no paired device found, ask user to select one
-    if (!device) {
-      device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: [
-          '000018f0-0000-1000-8000-00805f9b34fb', 
-          'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-          '49535343-fe7d-4ae5-8fa9-9fafd205e455' // Common serial
-        ]
-      });
-    }
-
-    if (!device.gatt.connected) {
-      await device.gatt.connect();
-    }
-
-    const services = await device.gatt.getPrimaryServices();
-    let printCharacteristic = null;
-
-    for (const service of services) {
-      const characteristics = await service.getCharacteristics();
-      for (const characteristic of characteristics) {
-        if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
-          printCharacteristic = characteristic;
-          break;
+      // Try to get already paired devices first for auto-print
+      if (navigator.bluetooth.getDevices) {
+        const devices = await navigator.bluetooth.getDevices();
+        if (devices.length > 0) {
+          device = devices[0];
         }
       }
-      if (printCharacteristic) break;
-    }
 
-    if (!printCharacteristic) {
-      throw new Error("Could not find a writable characteristic on this Bluetooth device.");
-    }
+      // If no paired device found, ask user to select one
+      if (!device) {
+        device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [
+            '000018f0-0000-1000-8000-00805f9b34fb', 
+            'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+            '49535343-fe7d-4ae5-8fa9-9fafd205e455' // Common serial
+          ]
+        });
+      }
+
+      if (!device.gatt.connected) {
+        await device.gatt.connect();
+      }
+
+      const services = await device.gatt.getPrimaryServices();
+      let printCharacteristic = null;
+
+      for (const service of services) {
+        const characteristics = await service.getCharacteristics();
+        for (const characteristic of characteristics) {
+          if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+            printCharacteristic = characteristic;
+            break;
+          }
+        }
+        if (printCharacteristic) break;
+      }
+
+      if (!printCharacteristic) {
+        throw new Error("Could not find a writable characteristic on this Bluetooth device.");
+      }
 
       cachedDevice = device;
       cachedCharacteristic = printCharacteristic;
-}
+    }
 
     // Convert text to Esc/POS byte array
     const encoder = new TextEncoder();
