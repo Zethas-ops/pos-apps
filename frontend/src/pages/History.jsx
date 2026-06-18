@@ -145,7 +145,7 @@ function History() {
       type="date"
       value={startDate}
       onChange={(e) => setStartDate(e.target.value)}
-      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+      className="w-full pl-10 pr-4 py-2 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
     />
             </div>
             <div className="flex items-center text-gray-500">-</div>
@@ -155,7 +155,7 @@ function History() {
     type="date"
      value={endDate}
       onChange={(e) => setEndDate(e.target.value)}
-      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+      className="w-full pl-10 pr-4 py-2 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
   />
           </div>
           </div>
