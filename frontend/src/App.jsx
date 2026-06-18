@@ -24,7 +24,7 @@ function PrivateRoute({ children, requirePermission }) {
     return <Navigate to="/login" />;
   }
   const user = JSON.parse(userStr);
-  const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : []);
+   const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "payment-methods", "settings"] : []);
   
   if (requirePermission && !permissions.includes(requirePermission)) {
     return <Navigate to="/" />;
@@ -47,7 +47,7 @@ function App() {
           <Route path="inventory" element={<PrivateRoute requirePermission="inventory"><Inventory /></PrivateRoute>} />
           <Route path="promo" element={<PrivateRoute requirePermission="promo"><Promo /></PrivateRoute>} />
           <Route path="roles" element={<PrivateRoute requirePermission="roles"><RoleManagement /></PrivateRoute>} />
-          <Route path="payment-methods" element={<PrivateRoute requirePermission="settings"><PaymentMethods /></PrivateRoute>} />
+          <Route path="payment-methods" element={<PrivateRoute requirePermission="payment-methods"><PaymentMethods /></PrivateRoute>} />
           <Route path="settings" element={<PrivateRoute requirePermission="settings"><Settings /></PrivateRoute>} />
         </Route>
       </Routes>

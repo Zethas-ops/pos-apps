@@ -19,7 +19,7 @@ function Layout() {
   const navigate = useNavigate();
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
-  const permissions = user?.permissions || (user?.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "settings"] : []);
+  const permissions = user?.permissions || (user?.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "payment-methods", "settings"] : []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -35,8 +35,8 @@ function Layout() {
     { path: "/menu", label: "Menu", icon: <MenuSquare size={20} />, permission: "menu" },
     { path: "/inventory", label: "Inventory", icon: <Package size={20} />, permission: "inventory" },
     { path: "/promo", label: "Promo", icon: <Tag size={20} />, permission: "promo" },
+    { path: "/payment-methods", label: "Payment Methods", icon: <CreditCard size={20} />, permission: "payment-methods" },
     { path: "/roles", label: "Roles", icon: <Users size={20} />, permission: "roles" },
-    { path: "/payment-methods", label: "Payment Methods", icon: <CreditCard size={20} />, permission: "settings" },
     { path: "/settings", label: "Settings", icon: <SettingsIcon size={20} />, permission: "settings" },
   ];
 
@@ -61,9 +61,24 @@ function Layout() {
       {/* Sidebar */}
       <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-colors">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">POS System</h1>
-            {user && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Welcome, {user.username}</p>}
+          <div className="flex items-center gap-3">
+            <img
+              src="/logobrowser.png"
+              alt="Qubite POS"
+              className="w-8 h-8 object-contain"
+            />
+
+            <div>
+              <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                Qubite POS
+              </h1>
+
+              {user && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Welcome, {user.username}
+                </p>
+              )}
+            </div>
           </div>
           <button
             onClick={toggleTheme}

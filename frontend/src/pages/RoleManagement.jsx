@@ -9,6 +9,7 @@ const AVAILABLE_FEATURES = [
   { id: 'menu', label: 'Menu Management' },
   { id: 'inventory', label: 'Inventory' },
   { id: 'promo', label: 'Promotions' },
+  { id: 'payment-methods', label: 'Payment Methods' },
   { id: 'roles', label: 'Role Management' },
   { id: 'settings', label: 'Settings' }
 ];
