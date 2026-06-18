@@ -24,7 +24,14 @@ function PrivateRoute({ children, requirePermission }) {
     return <Navigate to="/login" />;
   }
   const user = JSON.parse(userStr);
-   const permissions = user.permissions || (user.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "payment-methods", "settings"] : []);
+   const adminPerms = ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "payment-methods", "settings"];
+  const rawPerms = user.permissions;
+  let permissions = [];
+  if (user.role === "ADMIN") {
+    permissions = adminPerms;
+  } else {
+    permissions = Array.isArray(rawPerms) ? rawPerms : (typeof rawPerms === 'string' ? JSON.parse(rawPerms) : []);
+  }
   
   if (requirePermission && !permissions.includes(requirePermission)) {
     return <Navigate to="/" />;

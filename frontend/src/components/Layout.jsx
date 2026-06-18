@@ -19,8 +19,15 @@ function Layout() {
   const navigate = useNavigate();
   const userStr = localStorage.getItem("user");
   const user = userStr ? JSON.parse(userStr) : null;
-  const permissions = user?.permissions || (user?.role === "ADMIN" ? ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "payment-methods", "settings"] : []);
-
+  const adminPerms = ["pos", "open-bills", "history", "menu", "inventory", "promo", "roles", "payment-methods", "settings"];
+  const rawPerms = user?.permissions;
+  let permissions = [];
+  if (user?.role === "ADMIN") {
+    permissions = adminPerms;
+  } else {
+    permissions = Array.isArray(rawPerms) ? rawPerms : (typeof rawPerms === 'string' ? JSON.parse(rawPerms) : []);
+  }
+  
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
