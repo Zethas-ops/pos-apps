@@ -9,7 +9,10 @@ const TIMEZONE = 'Asia/Jakarta';
 function History() {
   const [transactions, setTransactions] = useState([]);
   const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [startDate, setStartDate] = useState(moment().tz(TIMEZONE).format("YYYY-MM-DD"));
+  const [endDate, setEndDate] = useState(moment().tz(TIMEZONE).format("YYYY-MM-DD"));
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 20;
   const [expandedId, setExpandedId] = useState(null);
   const [storeProfile, setStoreProfile] = useState(null);
 
@@ -111,24 +114,50 @@ function History() {
     });
   }, [transactions]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, startDate, endDate]);
+
   const filteredTransactions = transactionsWithInvoice.filter((t) => {
-    const matchSearch = t.customer_name.toLowerCase().includes(search.toLowerCase()) || t.invoice_no.includes(search);
+    const matchSearch = String(t.customer_name || "").toLowerCase().includes(search.toLowerCase()) || String(t.invoice_no || "").includes(search);
     const localDate = moment.utc(t.date).tz(TIMEZONE).format("YYYY-MM-DD");
-    const matchDate = dateFilter ? localDate === dateFilter : true;
+    
+    let matchDate = true;
+    if (startDate) {
+      matchDate = matchDate && localDate >= startDate;
+    }
+    if (endDate) {
+      matchDate = matchDate && localDate <= endDate;
+    }
     return matchSearch && matchDate;
   });
+  
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const paginatedTransactions = filteredTransactions.slice((page - 1) * itemsPerPage, page * itemsPerPage);
   return <div className="p-8 space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Transaction History</h1>
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
-          <div className="relative w-full sm:w-auto">
+          <div className="flex space-x-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-40">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input
+      type="date"
+      value={startDate}
+      onChange={(e) => setStartDate(e.target.value)}
+      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+    />
+            </div>
+            <div className="flex items-center text-gray-500">-</div>
+            <div className="relative flex-1 sm:w-40">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-400" size={20} />
             <input
     type="date"
-    value={dateFilter}  
-    onChange={(e) => setDateFilter(e.target.value)}
-    className="w-full pl-10 pr-4 py-2 dark:text-gray-300 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
+     value={endDate}
+      onChange={(e) => setEndDate(e.target.value)}
+      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
   />
+          </div>
           </div>
           <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -157,7 +186,7 @@ function History() {
             </tr>
           </thead>
           <tbody>
-            {filteredTransactions.map((t) => <React.Fragment key={t.transaction_id}>
+            {paginatedTransactions.map((t) => <React.Fragment key={t.transaction_id}>
                 <tr className="border-b border-gray-100 hover:bg-gray-200 dark:hover:bg-gray-900 transition-colors cursor-pointer" onClick={() => setExpandedId(expandedId === t.transaction_id ? null : t.transaction_id)}>
                   <td className="p-4 font-medium text-gray-800 dark:text-gray-300">
                     <div className="flex items-center space-x-2">
@@ -232,13 +261,36 @@ function History() {
                     </td>
                   </tr>}
               </React.Fragment>)}
-            {filteredTransactions.length === 0 && <tr>
+            {paginatedTransactions.length === 0 && <tr>
                 <td colSpan={7} className="p-8 text-center text-gray-500 dark:text-gray-400">
                   No transactions found.
                 </td>
               </tr>}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700">
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filteredTransactions.length)} of {filteredTransactions.length} entries
+            </span>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>;
 }
